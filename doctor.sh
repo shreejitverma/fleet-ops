@@ -162,9 +162,12 @@ if p=$(command -v grok 2>/dev/null); then
   else
     bad "grok at $p does not answer --version"
   fi
+  if [ "$p" != "$HOME/.local/bin/grok" ]; then
+    bad "grok on PATH is $p, want ~/.local/bin/grok (official installer; npm uninstall -g @xai-official/grok)"
+  fi
   dups=$(type -a grok 2>/dev/null | grep -c "is /" || true)
   if [ "$dups" -gt 1 ]; then
-    warn "grok: $dups copies on PATH: $(type -a grok | awk '/is \// {print $NF}' | tr '\n' ' ')"
+    bad "grok: $dups copies on PATH: $(type -a grok | awk '/is \// {print $NF}' | tr '\n' ' ')(keep ~/.local/bin/grok; npm uninstall -g @xai-official/grok)"
   fi
   if [ -d "$HOME/.grok" ]; then
     case "$(readlink "$HOME/.grok/AGENTS.md" 2>/dev/null)" in

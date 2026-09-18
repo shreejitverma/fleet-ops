@@ -56,7 +56,7 @@ Two layers, no duplicates, forks stay pristine mirrors:
 - `~/github/.fleet/logs/launchd.{out,err}.log` - launchd-level output.
 - `~/github/.fleet/logs/bootstrap-*.log` - bootstrap runs.
 
-`./doctor.sh` also checks that `grok` on PATH is xAI Grok Build (not Homebrew's unrelated regex tool of the same name) and that `~/.grok/AGENTS.md` is the separate personal-layer file from `~/github/agents/GROK.md`, not Claude's `~/AGENTS.md`.
+`./doctor.sh` also checks that `grok` on PATH is xAI Grok Build (not Homebrew's unrelated regex tool of the same name), that the only copy is `~/.local/bin/grok` (the official installer; a second npm copy is a FAIL), and that `~/.grok/AGENTS.md` is the separate personal-layer file from `~/github/agents/GROK.md`, not Claude's `~/AGENTS.md`.
 Grok is vendor-installed, not a fleet fork; a missing binary is a warning, not a FAIL.
 
 ## Add a repo to the fleet
