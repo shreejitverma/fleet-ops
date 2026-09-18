@@ -11,6 +11,8 @@
 #   repos.txt matches the manifest's sync: true list (server-side drift)
 #   sync LaunchAgent loaded, last sync run had no failures
 #   smoke: every CLI answers --version or --help with exit 0
+#   grok: PATH grok is xAI Grok Build at ~/.local/bin/grok only (a second copy
+#     is a FAIL); ~/.grok/AGENTS.md is the personal-layer GROK.md, not Claude's
 set -uo pipefail
 
 GH_ROOT="$HOME/github"
@@ -146,6 +148,41 @@ if [ -n "$last_log" ]; then
   fi
 else
   warn "no fleet sync log yet (agent runs daily at 10:00 or on load)"
+fi
+
+echo "== grok (xAI Grok Build) =="
+# Grok is a vendor-installed CLI, not a fleet fork. Confirm PATH grok is xAI
+# Grok Build at ~/.local/bin/grok only (a second copy, typically npm's
+# @xai-official/grok, is a FAIL), and that ~/.grok/AGENTS.md is the separate
+# personal-layer file rather than Claude's.
+if p=$(command -v grok 2>/dev/null); then
+  if v=$(grok --version </dev/null 2>/dev/null | head -1); then
+    case "$v" in
+      grok\ *\[stable\]|grok\ *\[beta\]|grok\ *\[nightly\]) ok "grok $v ($p)" ;;
+      *) bad "grok at $p is not xAI Grok Build (got: $v). Install with: curl -fsSL https://x.ai/cli/install.sh | bash" ;;
+    esac
+  else
+    bad "grok at $p does not answer --version"
+  fi
+  if [ "$p" != "$HOME/.local/bin/grok" ]; then
+    bad "grok on PATH is $p, want ~/.local/bin/grok (official installer; npm uninstall -g @xai-official/grok)"
+  fi
+  grok_paths=$(type -a grok 2>/dev/null | awk '/is \// { if (!seen[$NF]++) print $NF }')
+  dups=$(printf '%s\n' "$grok_paths" | grep -c '^/' || true)
+  if [ "$dups" -gt 1 ]; then
+    bad "grok: $dups copies on PATH: $(printf '%s\n' "$grok_paths" | tr '\n' ' ')(keep ~/.local/bin/grok; npm uninstall -g @xai-official/grok)"
+  fi
+  if [ -d "$HOME/.grok" ]; then
+    case "$(readlink "$HOME/.grok/AGENTS.md" 2>/dev/null)" in
+      "$GH_ROOT"/agents/GROK.md) ok "grok AGENTS.md is the separate personal-layer file" ;;
+      "$HOME"/AGENTS.md|"$HOME"/.claude/CLAUDE.md) bad "grok AGENTS.md still points at Claude's file (run: ic-link)" ;;
+      *) warn "grok AGENTS.md is not the versioned ~/github/agents/GROK.md (run: ic-link)" ;;
+    esac
+  else
+    warn "grok binary present but ~/.grok missing"
+  fi
+else
+  warn "grok not on PATH (install: curl -fsSL https://x.ai/cli/install.sh | bash)"
 fi
 
 echo "== smoke =="
