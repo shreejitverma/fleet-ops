@@ -11,7 +11,8 @@
 #   repos.txt matches the manifest's sync: true list (server-side drift)
 #   sync LaunchAgent loaded, last sync run had no failures
 #   smoke: every CLI answers --version or --help with exit 0
-#   grok: xAI Grok Build on PATH (not Homebrew's regex grok) and separate AGENTS.md
+#   grok: PATH grok is xAI Grok Build at ~/.local/bin/grok only (a second copy
+#     is a FAIL); ~/.grok/AGENTS.md is the personal-layer GROK.md, not Claude's
 set -uo pipefail
 
 GH_ROOT="$HOME/github"
@@ -150,9 +151,10 @@ else
 fi
 
 echo "== grok (xAI Grok Build) =="
-# Grok is a vendor-installed CLI, not a fleet fork. Confirm the binary on PATH
-# is xAI Grok Build rather than Homebrew's unrelated regex tool of the same name,
-# and that duplicate copies are visible instead of silently shadowing.
+# Grok is a vendor-installed CLI, not a fleet fork. Confirm PATH grok is xAI
+# Grok Build at ~/.local/bin/grok only (a second copy, typically npm's
+# @xai-official/grok, is a FAIL), and that ~/.grok/AGENTS.md is the separate
+# personal-layer file rather than Claude's.
 if p=$(command -v grok 2>/dev/null); then
   if v=$(grok --version </dev/null 2>/dev/null | head -1); then
     case "$v" in
