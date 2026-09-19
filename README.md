@@ -40,6 +40,8 @@ Generated into `aliases.zsh` by `gen-aliases.sh` from the manifest; sourced by
 Jump aliases: `cdlav cdfm cdnm cdaxi cdcda cdgha cdap cdbm cdta cdqa cdth cdsp cdtbc cdjr cdpz cdob cdsb cdpb cddot cdgnhf cdwh`.
 Run aliases (only defined when the binary exists): `lav gha ap jr` new, plus the pre-existing `nm cda ta qa th gn` from ic-workflow.zsh (`nm` deliberately shadows `/usr/bin/nm`).
 Fleet commands: `fleet-sync`, `fleet-sync-dry`, `fleet-doctor`, `fleet-status`, `fleet-cd`.
+`fleet-doctor` (`./doctor.sh`) also checks that `grok` on PATH is xAI Grok Build (not Homebrew's unrelated regex tool of the same name), that the only copy is `~/.local/bin/grok` (the official installer; a second npm copy is a FAIL), and that `~/.grok/AGENTS.md` is the separate personal-layer file from `~/github/agents/GROK.md`, not Claude's `~/AGENTS.md`.
+Grok is vendor-installed, not a fleet fork; a missing binary is a warning, not a FAIL.
 
 ## How sync works
 
