@@ -51,6 +51,7 @@ Two layers, no duplicates, forks stay pristine mirrors:
 2. Server-side (works with the Mac off): the private `shreejitverma/fleet-ops` repo runs `.github/workflows/fleet-sync.yml` daily at 14:00 UTC, looping `repos.txt` (mirrored from this manifest's `sync: true` list) with `gh repo sync`. Per-fork workflow files were deliberately rejected: a workflow commit on a fork's default branch permanently diverges it, breaking ff-only sync. Needs the `FLEET_SYNC_TOKEN` secret (fine-grained PAT, Contents read-write).
 
 `dotfiles-nix` itself is `sync: false`: it carries fork-specific commits and syncs from upstream via deliberate merge-commit PRs (see its CLAUDE.md); ff-only can never apply to it.
+`firstmate` is `sync: false` for the same reason since 2026-09-19: its fork carries fork-specific commits that are not contributed to the parent, so parent updates arrive through a deliberate sync-upstream merge PR on the fork.
 
 ## Logs
 
@@ -70,7 +71,7 @@ On a fresh machine, apply the dotfiles-nix rebuild (nix plus the base toolchain)
 
 ## Disable sync
 
-- One repo: set `sync: false` in its manifest entry.
+- One repo: set `sync: false` in its manifest entry, then regenerate `repos.txt` (step 3 of "Add a repo to the fleet") so the server-side loop drops it too and `doctor.sh` sees no drift. Record why in the entry's `notes:`.
 - Everything: set `launchd.agents.sync-forks.enable = false` in `dotfiles-nix/nix/home/darwin.nix` and rebuild (`rebuild` alias), or one-off: `launchctl bootout gui/$(id -u)/org.nix-community.home.sync-forks`.
 
 ## Undo everything the fleet setup did

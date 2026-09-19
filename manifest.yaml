@@ -35,8 +35,8 @@
   install_mechanism: "clone is the distro: AGENTS.md + skills + bin/fm-* helper scripts invoked in-repo by agent harnesses; nothing goes on PATH"
   provides_bin: []
   aliases: {jump: cdfm}
-  sync: true
-  notes: "Agent-crew orchestration distro (tmux/worktree based). Provides the stow skill via ic-link. Already in sync-forks."
+  sync: false
+  notes: "Agent-crew orchestration distro (tmux/worktree based). Provides the stow skill via ic-link. sync: false is deliberate since 2026-09-19: this fork carries fork-specific commits (first: shreejitverma/firstmate#1, bootstrap accepts the gemini dispatch harness without the typed key) and the owner does not open PRs on the parent, so it can never fast-forward and ff-only sync would misreport it as diverged daily. Take parent updates through a deliberate sync-upstream merge PR on the fork via no-mistakes, then run /updatefirstmate in the running home."
 
 - name: no-mistakes
   owner: shreejitverma
