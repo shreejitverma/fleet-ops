@@ -31,6 +31,9 @@ entries() {
   ' "$MANIFEST"
 }
 
+# The emitted file is sourced by zsh, but every construct in it parses as
+# bash, so the shell=bash directive is what keeps ShellCheck able to check
+# it at all (without it, the .zsh name yields SC2148 and no analysis).
 {
   cat <<'HEADER'
 # shellcheck shell=bash
