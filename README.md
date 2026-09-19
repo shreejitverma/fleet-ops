@@ -69,7 +69,7 @@ On a fresh machine, apply the dotfiles-nix rebuild (nix plus the base toolchain)
 
 ## Disable sync
 
-- One repo: set `sync: false` in its manifest entry.
+- One repo: set `sync: false` in its manifest entry, then regenerate `repos.txt` (step 3 of "Add a repo to the fleet") so the server-side loop drops it too and `doctor.sh` sees no drift. Record why in the entry's `notes:`.
 - Everything: set `launchd.agents.sync-forks.enable = false` in `dotfiles-nix/nix/home/darwin.nix` and rebuild (`rebuild` alias), or one-off: `launchctl bootout gui/$(id -u)/org.nix-community.home.sync-forks`.
 
 ## Undo everything the fleet setup did
