@@ -39,6 +39,7 @@ alias cddot='cd $HOME/github/dotfiles-nix'
 alias cdgnhf='cd $HOME/github/gnhf'
 command -v gnhf >/dev/null && alias gn=gnhf
 alias cdwh='cd $HOME/github/wheelhouse'
+alias cdca='cd $HOME/github/compact-adviser'
 
 # --- fleet commands ---
 alias fleet-sync='sync-forks'

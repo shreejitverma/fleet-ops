@@ -30,6 +30,7 @@ One line each, learned from the repos themselves, not their names.
 | dotfiles-nix | nix-darwin + home-manager flake; owns shell/git config, PATH, and the sync agent. THE config source of truth. |
 | gnhf | Overnight agent-run manager ("good night, have fun"). |
 | wheelhouse | IssueOps command center running on GitHub Actions; fork state tracked in its manifest notes. |
+| compact-adviser | Agent plugin that hints when a session is at a safe point to `/compact` (TypeSafe Jev judge); wired into Claude Code and Grok, no PATH bin. |
 
 ## Aliases
 
@@ -37,7 +38,7 @@ Generated into `aliases.zsh` by `gen-aliases.sh` from the manifest; sourced by
 `dotfiles-nix/files/zsh/ic-workflow.zsh` (interactive shells only). Never hand-edit
 `aliases.zsh`; edit the manifest's `aliases:` fields and re-run `gen-aliases.sh`.
 
-Jump aliases: `cdlav cdfm cdnm cdaxi cdcda cdgha cdap cdbm cdta cdqa cdth cdsp cdtbc cdjr cdpz cdob cdsb cdpb cddot cdgnhf cdwh`.
+Jump aliases: `cdlav cdfm cdnm cdaxi cdcda cdgha cdap cdbm cdta cdqa cdth cdsp cdtbc cdjr cdpz cdob cdsb cdpb cddot cdgnhf cdwh cdca`.
 Run aliases (only defined when the binary exists): `lav gha ap jr` new, plus the pre-existing `nm cda ta qa th gn` from ic-workflow.zsh (`nm` deliberately shadows `/usr/bin/nm`).
 Fleet commands: `fleet-sync`, `fleet-sync-dry`, `fleet-doctor`, `fleet-status`, `fleet-cd`.
 `fleet-doctor` (`./doctor.sh`) also checks that `grok` on PATH is xAI Grok Build (not Homebrew's unrelated regex tool of the same name), that the only copy is `~/.local/bin/grok` (the official installer; a second npm copy is a FAIL), and that `~/.grok/AGENTS.md` is the separate personal-layer file from `~/github/agents/GROK.md`, not Claude's `~/AGENTS.md`.
