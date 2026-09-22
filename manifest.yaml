@@ -5,7 +5,7 @@
 # Conventions:
 #   install: verbatim command run from the repo root; "none" = nothing to install.
 #   provides_bin: executables expected on PATH after install (empirically verified).
-#   install_mechanism: how the bin reaches PATH today.
+#   install_mechanism: how the bin reaches PATH today (kind: plugin: how the agents load it).
 #   sync: include in daily upstream sync (ff-only policy; diverged forks are logged, never merged).
 
 - name: lavish-axi
@@ -324,3 +324,18 @@
   aliases: {jump: cdwh}
   sync: true
   notes: "Parent is ImZoomBoy/wheelhouse, confirmed by the owner on 2026-09-21: the original kunchenguid/wheelhouse no longer exists (404), and the project lives on in the repository formerly named autoprintworks/wheelhouse, which GitHub now serves as ImZoomBoy/wheelhouse (the old name redirects to the same commits) and lists as this fork's parent. The fork carries its own fleet config and merged history (115 commits ahead, 0 behind on 2026-09-21), so the ff-only sync reports it ahead and leaves it untouched; once the parent moves it is reported DIVERGED, and parent updates then arrive through a deliberate sync-upstream merge PR via no-mistakes (precedent: shreejitverma/wheelhouse#3). sync stays true so both sync layers keep watching the parent."
+
+- name: compact-adviser
+  owner: shreejitverma
+  is_fork: true
+  upstream: kunchenguid/compact-adviser
+  default_branch: main
+  path: ~/github/compact-adviser
+  kind: plugin
+  toolchain: [node@>=22.18]
+  install: "claude plugin marketplace update compact-adviser && { grok plugin uninstall compact-adviser >/dev/null 2>&1; grok plugin install $PWD/packages/grok-plugin --trust; }"
+  install_mechanism: "Agent plugin, no PATH bin and no build step. Claude Code: directory marketplace compact-adviser -> this clone (declared in ~/github/agents/claude/settings.json extraKnownMarketplaces, enabled in enabledPlugins); Claude reads hooks straight from packages/claude-mod here, so a fast-forward is live, and the install only refreshes marketplace metadata. The mod loads only with CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1, set in that settings.json env block (verified 2026-09-21: command present with it, absent without). Grok: installed from packages/grok-plugin as a COPY under ~/.grok/installed-plugins even though grok plugin update calls it a live local symlink and copies nothing, so the install uninstalls and reinstalls; that keeps ~/.grok/hooks/compact-adviser.json, ~/.grok/compact-adviser/ and the [ui.status_line] block in ~/.grok/config.toml, which the one-time adviser install and hand edit created. The install string must contain no '|', because bootstrap.sh splits manifest fields on it."
+  provides_bin: []
+  aliases: {jump: cdca}
+  sync: true
+  notes: "Should-I-/compact-now adviser (hint mode) for Claude Code and Grok via TypeSafe Jev; Codex and Pi are installed on this Mac but not wired, since routing uses Claude, Grok and Gemini only. Key: login Keychain service typesafe-api-key, injected per invocation by the claude/grok wrappers in dotfiles-nix files/zsh/ic-workflow.zsh; never save it through the Claude /compact-adviser menu, which writes typesafeApiKey into user settings.json, the git-tracked agents repo file, and never export it globally, which would also opt firstmate into typed dispatch. Unattended runs stay inert without extra wiring: firstmate exports COMPACT_ADVISER_DISABLE=1 into every crewmate, and no-mistakes and gnhf drive claude -p, which the adviser detects as non-interactive."
