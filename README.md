@@ -85,5 +85,5 @@ On a fresh machine, apply the dotfiles-nix rebuild (nix plus the base toolchain)
 
 - Workspace root is `~/github` (pre-existing reality), not `~/dev`.
 - No mise/asdf introduced: Homebrew node v26 satisfies every engine pin in the fleet; presize's pnpm@8 is honored by corepack via its `packageManager` field. Revisit only if a repo pins an incompatible runtime.
-- Sync is ff-only (2026-08-11 decision); a diverged fork stays diverged until manually reconciled (wheelhouse was, on 2026-08-12 - see its manifest notes).
+- Sync is ff-only (2026-08-11 decision); a diverged fork stays diverged until manually reconciled (wheelhouse is reconciled by a sync-upstream merge PR - see its manifest notes).
 - `pull.rebase = true` kept from the nix config (prompt suggested false; overridden by explicit decision).

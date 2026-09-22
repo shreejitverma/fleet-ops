@@ -313,7 +313,7 @@
 - name: wheelhouse
   owner: shreejitverma
   is_fork: true
-  upstream: kunchenguid/wheelhouse
+  upstream: ImZoomBoy/wheelhouse
   default_branch: main
   path: ~/github/wheelhouse
   kind: config
@@ -323,4 +323,4 @@
   provides_bin: []
   aliases: {jump: cdwh}
   sync: true
-  notes: "Reconciled with upstream locally on 2026-08-12 (merge commit); 3 local commits await a deliberate push (sync never auto-publishes ahead-only work). Was in old sync-forks list; not part of the original 19."
+  notes: "Parent is ImZoomBoy/wheelhouse, confirmed by the owner on 2026-09-21: the original kunchenguid/wheelhouse no longer exists (404), and the project lives on in the repository formerly named autoprintworks/wheelhouse, which GitHub now serves as ImZoomBoy/wheelhouse (the old name redirects to the same commits) and lists as this fork's parent. The fork carries its own fleet config and merged history (115 commits ahead, 0 behind on 2026-09-21), so the ff-only sync reports it ahead and leaves it untouched; once the parent moves it is reported DIVERGED, and parent updates then arrive through a deliberate sync-upstream merge PR via no-mistakes (precedent: shreejitverma/wheelhouse#3). sync stays true so both sync layers keep watching the parent."
