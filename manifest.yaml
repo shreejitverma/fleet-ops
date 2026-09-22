@@ -5,7 +5,7 @@
 # Conventions:
 #   install: verbatim command run from the repo root; "none" = nothing to install.
 #   provides_bin: executables expected on PATH after install (empirically verified).
-#   install_mechanism: how the bin reaches PATH today.
+#   install_mechanism: how the bin reaches PATH today (kind: plugin: how the agents load it).
 #   sync: include in daily upstream sync (ff-only policy; diverged forks are logged, never merged).
 
 - name: lavish-axi
