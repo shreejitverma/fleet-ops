@@ -1,0 +1,19 @@
+# Pull-request and main-branch CI.
+# fleet-sync.yml is schedule and workflow_dispatch only, so a pull request
+# otherwise reports zero checks. The ship gate treats that empty rollup as
+# not ready and waits forever. This workflow is the check that registers.
+name: ci
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fast-forward loop keeps going after one fork fails
+        run: bash tests/fleet_sync_remote_test.sh

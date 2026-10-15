@@ -9,7 +9,9 @@
 #     (and npm links point at the clones)
 #   no alias/binary collisions from aliases.zsh
 #   repos.txt matches the manifest's sync: true list (server-side drift)
-#   sync LaunchAgent loaded, last sync run had no failures
+#   sync LaunchAgent loaded, last sync run had no failures (warns on diverged
+#     forks and, when the log has a manual:[] field, sync:false forks behind
+#     upstream)
 #   smoke: every CLI answers --version or --help with exit 0
 #   grok: PATH grok is xAI Grok Build at ~/.local/bin/grok only (a second copy
 #     is a FAIL); ~/.grok/AGENTS.md is the personal-layer GROK.md, not Claude's
@@ -143,6 +145,10 @@ if [ -n "$last_log" ]; then
   elif echo "$done_line" | grep -q "failed:\[ \]"; then
     ok "last sync run clean: $(basename "$last_log")"
     echo "$done_line" | grep -q "diverged:\[ \]" || warn "diverged forks present: see $last_log"
+    if echo "$done_line" | grep -q "manual:\["; then
+      echo "$done_line" | grep -q "manual:\[ \]" \
+        || warn "sync:false forks are behind upstream: see $last_log"
+    fi
   else
     bad "last sync run had failures: $done_line"
   fi

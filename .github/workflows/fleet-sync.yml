@@ -5,8 +5,15 @@
 # One central repo loops all forks instead; forks stay pristine mirrors.
 #
 # Requires the FLEET_SYNC_TOKEN Actions secret: a fine-grained PAT with
-# Contents read-write on shreejitverma's repos (github.token only reaches the
-# host repo). repos.txt in fleet-ops mirrors the manifest's sync: true list.
+# Contents read-write AND Workflows read-write on every sync:true repo,
+# including repos added after the token was created. github.token only
+# reaches this host repo. A contents-only token gets HTTP 422 from
+# merge-upstream when the commits touch .github/workflows, and a token whose
+# repository list omits a fork gets HTTP 404 even when the branches match.
+# repos.txt mirrors the manifest's sync: true list.
+# The loop lives in bin/fleet-sync-remote.sh so a failure is printed and does
+# not abort the rest of the list. The inline `bash -e` body used to exit
+# inside `out=$(gh repo sync ...)` before that line was logged.
 name: fleet-sync
 on:
   schedule:
@@ -20,21 +27,4 @@ jobs:
       - name: Fast-forward every fork's default branch from upstream
         env:
           GH_TOKEN: ${{ secrets.FLEET_SYNC_TOKEN }}
-        run: |
-          set -u
-          fail=0
-          while IFS= read -r repo; do
-            [ -z "$repo" ] && continue
-            case "$repo" in \#*) continue ;; esac
-            out=$(gh repo sync "shreejitverma/$repo" 2>&1)
-            status=$?
-            if [ $status -eq 0 ]; then
-              echo "ok        $repo: $out"
-            elif echo "$out" | grep -qi "diverg"; then
-              echo "diverged  $repo (left untouched)"
-            else
-              echo "FAILED    $repo: $out"
-              fail=1
-            fi
-          done < repos.txt
-          exit $fail
+        run: bash bin/fleet-sync-remote.sh
