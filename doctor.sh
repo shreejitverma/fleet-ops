@@ -143,6 +143,10 @@ if [ -n "$last_log" ]; then
   elif echo "$done_line" | grep -q "failed:\[ \]"; then
     ok "last sync run clean: $(basename "$last_log")"
     echo "$done_line" | grep -q "diverged:\[ \]" || warn "diverged forks present: see $last_log"
+    if echo "$done_line" | grep -q "manual:\["; then
+      echo "$done_line" | grep -q "manual:\[ \]" \
+        || warn "sync:false forks are behind upstream: see $last_log"
+    fi
   else
     bad "last sync run had failures: $done_line"
   fi
