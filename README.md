@@ -52,7 +52,9 @@ Two layers, no duplicates, forks stay pristine mirrors:
 2. Server-side (works with the Mac off): the private `shreejitverma/fleet-ops` repo runs `.github/workflows/fleet-sync.yml` daily at 14:00 UTC, looping `repos.txt` (mirrored from this manifest's `sync: true` list) with `gh repo sync` via `bin/fleet-sync-remote.sh`. One repo's failure is printed and the loop continues. Per-fork workflow files were deliberately rejected: a workflow commit on a fork's default branch permanently diverges it, breaking ff-only sync. Needs the `FLEET_SYNC_TOKEN` secret (fine-grained PAT, Contents read-write and Workflows read-write, on every sync:true repo including ones added later).
 
 `dotfiles-nix` itself is `sync: false`: it carries fork-specific commits and syncs from upstream via deliberate merge-commit PRs (see its CLAUDE.md); ff-only can never apply to it.
-`firstmate` is `sync: false` for the same reason since 2026-09-19: its fork carries fork-specific commits that are not contributed to the parent, so parent updates arrive through a deliberate sync-upstream merge PR on the fork. The daily job still fetches these forks and names them when they are behind upstream. It does not merge them.
+`firstmate` is `sync: false` for the same reason since 2026-09-19: its fork carries fork-specific commits that are not contributed to the parent, so parent updates arrive through a deliberate sync-upstream merge PR on the fork.
+Neither sync layer touches `sync: false` forks.
+`doctor.sh` warns when the last local sync log's done line lists them in a non-empty `manual:[...]` field (behind upstream); `sync-forks` does not emit that field yet, so the check stays silent until it does.
 
 ## Logs
 
