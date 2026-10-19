@@ -9,6 +9,9 @@
 #     (and npm links point at the clones)
 #   no alias/binary collisions from aliases.zsh
 #   repos.txt matches the manifest's sync: true list (server-side drift)
+#   server-side sync: the last completed fleet-sync run succeeded, recently
+#     (bin/fleet-sync-last-run.sh; failure, timed_out, startup_failure FAIL;
+#     unreachable GitHub is a warn)
 #   sync LaunchAgent loaded, last sync run had no failures (warns on diverged
 #     forks and, when the log has a manual:[] field, sync:false forks behind
 #     upstream)
@@ -136,6 +139,15 @@ if [ -f "$FLEET_DIR/repos.txt" ]; then
 else
   warn "repos.txt missing (server-side sync list)"
 fi
+
+echo "== server-side sync =="
+# A fork the workflow token cannot reach fails only on GitHub; the local
+# layer still syncs it, so without this nothing here would show it.
+# bin/fleet-sync-last-run.sh owns the check and prints ok/warn/FAIL lines.
+ss_status=0
+ss_out=$("$FLEET_DIR/bin/fleet-sync-last-run.sh" </dev/null 2>&1) || ss_status=$?
+printf '%s\n' "$ss_out" | sed 's/^/  /'
+[ "$ss_status" -eq 0 ] || fail=1
 
 echo "== sync agent =="
 if launchctl print "gui/$(id -u)/$AGENT_LABEL" >/dev/null 2>&1; then

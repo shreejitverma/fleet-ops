@@ -12,6 +12,7 @@
 # repository list omits a fork fails even when the branches match: HTTP 403
 # "Resource not accessible by personal access token" for a public fork
 # (acp-mock, pi-launcher and archify on 2026-10-18), 404 for one it cannot see.
+# doctor.sh reports such a run (bin/fleet-sync-last-run.sh).
 # repos.txt mirrors the manifest's sync: true list.
 # The loop lives in bin/fleet-sync-remote.sh so a failure is printed and does
 # not abort the rest of the list. The inline `bash -e` body used to exit
