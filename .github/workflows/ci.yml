@@ -14,7 +14,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+      - name: Shell scripts are shellcheck-clean
+        run: shellcheck bootstrap.sh doctor.sh gen-aliases.sh bin/*.sh tests/*.sh
       - name: Fast-forward loop keeps going after one fork fails
         run: bash tests/fleet_sync_remote_test.sh
       - name: Pi Launcher installer verifies the signed cask
