@@ -42,6 +42,7 @@ alias cdwh='cd $HOME/github/wheelhouse'
 alias cdca='cd $HOME/github/compact-adviser'
 alias cdacp='cd $HOME/github/acp-mock'
 alias cdpil='cd $HOME/github/pi-launcher'
+alias cdarch='cd $HOME/github/archify'
 
 # --- fleet commands ---
 alias fleet-sync='sync-forks'

@@ -33,6 +33,7 @@ One line each, learned from the repos themselves, not their names.
 | compact-adviser | Agent plugin that hints when a session is at a safe point to `/compact` (TypeSafe Jev judge); wired into Claude Code and Grok, no PATH bin. |
 | acp-mock | Deterministic ACP agent over stdio, the token-free test double for ACP clients; `acp-mock` is npm-linked, while gnhf and baby-menu consume the npm package. |
 | pi-launcher | Signed, notarized macOS app that runs the bundled official Pi as `pi-signed` (firstmate's `pi-signed` harness); installed from `kunchenguid/tap`, never built from the clone. |
+| archify | Agent skill (parent `tt-a1i/archify`) that turns a description, Mermaid, or a traced repository into validated interactive HTML diagrams and one-page explainers; runs from the clone, linked into every agent by `ic-link`, no PATH bin. |
 
 ## Aliases
 

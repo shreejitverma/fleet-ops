@@ -5,7 +5,7 @@
 # Conventions:
 #   install: verbatim command run from the repo root; "none" = nothing to install.
 #   provides_bin: executables expected on PATH after install (empirically verified).
-#   install_mechanism: how the bin reaches PATH today (kind: plugin: how the agents load it).
+#   install_mechanism: how the bin reaches PATH today (kind: plugin or skill: how the agents load it).
 #   sync: include in daily upstream sync (ff-only policy; diverged forks are logged, never merged).
 
 - name: lavish-axi
@@ -371,3 +371,17 @@
   aliases: {jump: cdpil}
   sync: true
   notes: "Signed, notarized macOS app that runs the one bundled official Pi under a stable code-signed parent identity. firstmate supports it as the distinct pi-signed harness (FM_PI_HARNESS=pi-signed; fm-spawn resolves pi-signed from PATH and never falls back to pi); routing still uses Claude, Grok and Gemini only, so nothing dispatches to it by default. The separate npm pi (/opt/homebrew/bin/pi) is untouched. GitHub Actions is disabled on the fork (2026-10-18): upstream's upstream-pi-sync.yml cron bumps the Pi pin and auto-merges the release PR, and release-please runs on push, so either would commit to the mirror's main and break ff-only sync."
+- name: archify
+  owner: shreejitverma
+  is_fork: true
+  upstream: tt-a1i/archify
+  default_branch: main
+  path: ~/github/archify
+  kind: skill
+  toolchain: [node@>=18]
+  install: "node archify/bin/archify.mjs doctor"
+  install_mechanism: "Agent skill run straight from this clone, no build and no npm install (verified 2026-10-18: doctor and a full finalize, including the real-browser check, pass on a clean clone without node_modules). ic-link points ~/.agents/skills/archify at archify/ (the skill package lives one level down, not under skills/), and the Claude, Codex, and Grok skill directories mirror that link, so a fast-forward is live in every agent at once. The install command is the skill's own offline self-check; sync-forks runs it after each fast-forward, so an upstream change that breaks the package fails the sync and notifies instead of reaching agents silently."
+  provides_bin: []
+  aliases: {jump: cdarch}
+  sync: true
+  notes: "Interactive HTML diagrams (architecture, workflow, sequence, dataflow, lifecycle, ERD, class, tree, timeline, waterfall) and one-page explainers, validated and browser-checked. Fleet sync is its update path, never npx skills add or update: that would write a real copy over the link, which ic-link then refuses to replace. Its own update reminder is switched off with ARCHIFY_UPDATE_CHECK_DISABLED=1 in dotfiles-nix home.sessionVariables for that reason. The explainer mode is pinned to on-demand in the agents repo ROUTING.md, because the skill otherwise offers to append a proactive rules line to ~/.claude/CLAUDE.md, which is a generated manual. The repo-local .agents/skills (archify-review, archify-tuning, simplify-codebase, test-value) are for contributing to archify itself and are deliberately not linked globally. Upstream also ships integrations/hermes-agent and integrations/deepseek-harness; neither harness is wired on this Mac."

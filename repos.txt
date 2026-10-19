@@ -20,3 +20,4 @@ wheelhouse
 compact-adviser
 acp-mock
 pi-launcher
+archify
