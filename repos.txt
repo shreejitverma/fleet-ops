@@ -18,3 +18,4 @@ programbench-bench
 gnhf
 wheelhouse
 compact-adviser
+archify

@@ -339,3 +339,18 @@
   aliases: {jump: cdca}
   sync: true
   notes: "Should-I-/compact-now adviser (hint mode) for Claude Code and Grok via TypeSafe Jev; Codex and Pi are installed on this Mac but not wired, since routing uses Claude, Grok and Gemini only. Key: login Keychain service typesafe-api-key, injected per invocation by the claude/grok wrappers in dotfiles-nix files/zsh/ic-workflow.zsh; never save it through the Claude /compact-adviser menu, which writes typesafeApiKey into user settings.json, the git-tracked agents repo file, and never export it globally, which would also opt firstmate into typed dispatch. Unattended runs stay inert without extra wiring: firstmate exports COMPACT_ADVISER_DISABLE=1 into every crewmate, and no-mistakes and gnhf drive claude -p, which the adviser detects as non-interactive."
+
+- name: archify
+  owner: shreejitverma
+  is_fork: true
+  upstream: tt-a1i/archify
+  default_branch: main
+  path: ~/github/archify
+  kind: skill
+  toolchain: [node@>=18]
+  install: "node archify/bin/archify.mjs doctor"
+  install_mechanism: "Agent skill run straight from this clone, no build and no npm install (verified 2026-10-18: doctor and a full finalize, including the real-browser check, pass on a clean clone without node_modules). ic-link points ~/.agents/skills/archify at archify/ (the skill package lives one level down, not under skills/), and the Claude, Codex, and Grok skill directories mirror that link, so a fast-forward is live in every agent at once. The install command is the skill's own offline self-check; sync-forks runs it after each fast-forward, so an upstream change that breaks the package fails the sync and notifies instead of reaching agents silently."
+  provides_bin: []
+  aliases: {jump: cdarch}
+  sync: true
+  notes: "Interactive HTML diagrams (architecture, workflow, sequence, dataflow, lifecycle, ERD, class, tree, timeline, waterfall) and one-page explainers, validated and browser-checked. Fleet sync is its update path, never npx skills add or update: that would write a real copy over the link, which ic-link then refuses to replace. Its own update reminder is switched off with ARCHIFY_UPDATE_CHECK_DISABLED=1 in dotfiles-nix home.sessionVariables for that reason. The explainer mode is pinned to on-demand in the agents repo ROUTING.md, because the skill otherwise offers to append a proactive rules line to ~/.claude/CLAUDE.md, which is a generated manual. The repo-local .agents/skills (archify-review, archify-tuning, simplify-codebase, test-value) are for contributing to archify itself and are deliberately not linked globally. Upstream also ships integrations/hermes-agent and integrations/deepseek-harness; neither harness is wired on this Mac."
