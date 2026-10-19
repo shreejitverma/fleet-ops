@@ -10,7 +10,8 @@
 #   no alias/binary collisions from aliases.zsh
 #   repos.txt matches the manifest's sync: true list (server-side drift)
 #   server-side sync: the last completed fleet-sync run succeeded, recently
-#     (bin/fleet-sync-last-run.sh; unreachable GitHub is a warn)
+#     (bin/fleet-sync-last-run.sh; failure, timed_out, startup_failure FAIL;
+#     unreachable GitHub is a warn)
 #   sync LaunchAgent loaded, last sync run had no failures (warns on diverged
 #     forks and, when the log has a manual:[] field, sync:false forks behind
 #     upstream)

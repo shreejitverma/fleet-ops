@@ -8,13 +8,15 @@
 # red, while the local sync layer keeps that fork current, so nothing on
 # this machine noticed (found 2026-10-18: archify, acp-mock, pi-launcher).
 #
+# Reads shreejitverma/fleet-ops. A run that ended failure, timed_out or
+# startup_failure is a FAIL; any other non-success conclusion is a warn.
 # Prints one "ok"/"warn"/"FAIL" line per finding, one FAIL per repo the run
 # could not sync, and exits 1 on any FAIL. Not being able to ask GitHub (gh
 # missing, offline, unauthenticated) is a warn, never a FAIL, so doctor.sh
 # stays usable offline.
 set -uo pipefail
 
-REPO="${FLEET_OPS_REPO:-shreejitverma/fleet-ops}"
+REPO="shreejitverma/fleet-ops"
 WORKFLOW="fleet-sync.yml"
 # The schedule is daily, so two days without a completed run means it
 # stopped firing.
@@ -58,8 +60,11 @@ case "$conclusion" in
   success)
     ok "last server-side fleet-sync run succeeded ${hours}h ago"
     ;;
-  failure)
-    bad "last server-side fleet-sync run failed ${hours}h ago: $url"
+  startup_failure)
+    bad "last server-side fleet-sync run did not start ${hours}h ago (is fleet-sync.yml valid?): $url"
+    ;;
+  failure | timed_out)
+    bad "last server-side fleet-sync run ended '$conclusion' ${hours}h ago: $url"
     # bin/fleet-sync-remote.sh prints "FAILED    <repo>: <error>" for each
     # repo it gave up on.
     failed=$(gh run view "$id" -R "$REPO" --log-failed 2>/dev/null | sed -n 's/.*FAILED    //p')
