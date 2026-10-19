@@ -340,6 +340,37 @@
   sync: true
   notes: "Should-I-/compact-now adviser (hint mode) for Claude Code and Grok via TypeSafe Jev; Codex and Pi are installed on this Mac but not wired, since routing uses Claude, Grok and Gemini only. Key: login Keychain service typesafe-api-key, injected per invocation by the claude/grok wrappers in dotfiles-nix files/zsh/ic-workflow.zsh; never save it through the Claude /compact-adviser menu, which writes typesafeApiKey into user settings.json, the git-tracked agents repo file, and never export it globally, which would also opt firstmate into typed dispatch. Unattended runs stay inert without extra wiring: firstmate exports COMPACT_ADVISER_DISABLE=1 into every crewmate, and no-mistakes and gnhf drive claude -p, which the adviser detects as non-interactive."
 
+# --- Harness dependencies added 2026-10-18 ---
+
+- name: acp-mock
+  owner: shreejitverma
+  is_fork: true
+  upstream: kunchenguid/acp-mock
+  default_branch: main
+  path: ~/github/acp-mock
+  kind: cli
+  toolchain: [node@>=20, pnpm@11.1.1]
+  install: "pnpm install --frozen-lockfile && pnpm run build"
+  install_mechanism: "npm-link: /opt/homebrew/lib/node_modules/acp-mock -> repo; build is live immediately (linked 2026-10-18)"
+  provides_bin: [acp-mock]
+  aliases: {jump: cdacp}
+  sync: true
+  notes: "Deterministic ACP agent over stdio for token-free E2E tests of ACP clients; the global bin is for ad-hoc client testing (acp-mock --help; there is no --version flag). gnhf (^1.1.0, e2e/e2e-acp.test.ts) and baby-menu (pinned 1.1.0) consume the published npm package through their own lockfiles; never link this clone into them, which would dirty those mirrors and stop their ff-only sync. GitHub Actions is disabled on the fork (2026-10-18): upstream's release-please runs on push to main and would open release PRs on the mirror."
+
+- name: pi-launcher
+  owner: shreejitverma
+  is_fork: true
+  upstream: kunchenguid/pi-launcher
+  default_branch: main
+  path: ~/github/pi-launcher
+  kind: cli
+  toolchain: [homebrew-cask, clang, python3]
+  install: "$HOME/github/.fleet/bin/install-pi-launcher.sh"
+  install_mechanism: "Homebrew cask kunchenguid/tap/pi-launcher: /Applications/Pi Launcher.app plus the /opt/homebrew/bin/pi-signed binary link. Never built from this clone: make app produces an unsigned dev app, and the product is the notarized Developer ID identity (Team 9T2J7MNUP9). bin/install-pi-launcher.sh installs or upgrades the cask, refreshes the taps once when the tap lags the fork's release, then verifies the cask version against the fork's .release-please-manifest.json, the pi-signed link, the code signature, Team ID, bundle id, Gatekeeper, and, when the cask is exactly the fork's release, that the bundled Pi matches packaging/pi-release.json at the fork's release tag v<version> (HEAD may already pin the next Pi); a missing tag only warns. doctor.sh runs it with --check. up's brew upgrade also upgrades the cask."
+  provides_bin: [pi-signed]
+  aliases: {jump: cdpil}
+  sync: true
+  notes: "Signed, notarized macOS app that runs the one bundled official Pi under a stable code-signed parent identity. firstmate supports it as the distinct pi-signed harness (FM_PI_HARNESS=pi-signed; fm-spawn resolves pi-signed from PATH and never falls back to pi); routing still uses Claude, Grok and Gemini only, so nothing dispatches to it by default. The separate npm pi (/opt/homebrew/bin/pi) is untouched. GitHub Actions is disabled on the fork (2026-10-18): upstream's upstream-pi-sync.yml cron bumps the Pi pin and auto-merges the release PR, and release-please runs on push, so either would commit to the mirror's main and break ff-only sync."
 - name: archify
   owner: shreejitverma
   is_fork: true

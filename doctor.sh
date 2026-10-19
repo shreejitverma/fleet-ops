@@ -15,6 +15,8 @@
 #   smoke: every CLI answers --version or --help with exit 0
 #   grok: PATH grok is xAI Grok Build at ~/.local/bin/grok only (a second copy
 #     is a FAIL); ~/.grok/AGENTS.md is the personal-layer GROK.md, not Claude's
+#   pi-launcher: the pi-signed cask is the notarized Team 9T2J7MNUP9 build at
+#     or past the fork's release (bin/install-pi-launcher.sh --check)
 set -uo pipefail
 
 GH_ROOT="$HOME/github"
@@ -189,6 +191,17 @@ if p=$(command -v grok 2>/dev/null); then
   fi
 else
   warn "grok not on PATH (install: curl -fsSL https://x.ai/cli/install.sh | bash)"
+fi
+
+echo "== pi-launcher (signed identity) =="
+# The installed app, not the clone, is the product: a stale or re-signed
+# cask would silently hand firstmate's pi-signed harness the wrong identity.
+# bin/install-pi-launcher.sh owns every check and prints ok/warn/FAIL lines.
+if grep -q '^- name: pi-launcher$' "$MANIFEST"; then
+  pil_status=0
+  pil_out=$("$FLEET_DIR/bin/install-pi-launcher.sh" --check </dev/null 2>&1) || pil_status=$?
+  printf '%s\n' "$pil_out" | sed 's/^/  /'
+  [ "$pil_status" -eq 0 ] || fail=1
 fi
 
 echo "== smoke =="

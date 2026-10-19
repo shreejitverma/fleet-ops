@@ -17,3 +17,5 @@ jobs:
       - uses: actions/checkout@v4
       - name: Fast-forward loop keeps going after one fork fails
         run: bash tests/fleet_sync_remote_test.sh
+      - name: Pi Launcher installer verifies the signed cask
+        run: bash tests/install_pi_launcher_test.sh
