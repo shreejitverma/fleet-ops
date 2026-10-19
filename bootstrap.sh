@@ -101,9 +101,12 @@ done < <(entries)
 
 # Regenerate aliases from the manifest so the two never drift.
 if [ -x "$FLEET_DIR/gen-aliases.sh" ]; then
-  "$FLEET_DIR/gen-aliases.sh" >>"$LOG" 2>&1 \
-    && log "aliases.zsh regenerated" \
-    || { log "gen-aliases FAILED"; failures="$failures gen-aliases"; }
+  if "$FLEET_DIR/gen-aliases.sh" >>"$LOG" 2>&1; then
+    log "aliases.zsh regenerated"
+  else
+    log "gen-aliases FAILED"
+    failures="$failures gen-aliases"
+  fi
 fi
 
 log "===== bootstrap done. failures:[${failures:- none} ] ====="

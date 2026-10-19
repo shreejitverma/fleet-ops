@@ -9,7 +9,9 @@
 # including repos added after the token was created. github.token only
 # reaches this host repo. A contents-only token gets HTTP 422 from
 # merge-upstream when the commits touch .github/workflows, and a token whose
-# repository list omits a fork gets HTTP 404 even when the branches match.
+# repository list omits a fork fails even when the branches match: HTTP 403
+# "Resource not accessible by personal access token" for a public fork
+# (acp-mock, pi-launcher and archify on 2026-10-18), 404 for one it cannot see.
 # repos.txt mirrors the manifest's sync: true list.
 # The loop lives in bin/fleet-sync-remote.sh so a failure is printed and does
 # not abort the rest of the list. The inline `bash -e` body used to exit
@@ -23,7 +25,7 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Fast-forward every fork's default branch from upstream
         env:
           GH_TOKEN: ${{ secrets.FLEET_SYNC_TOKEN }}

@@ -18,6 +18,12 @@ trap 'rm -rf "$sandbox"' EXIT
 fails=0
 ok() { printf 'ok: %s\n' "$*"; }
 bad() { printf 'FAIL: %s\n' "$*"; fails=$((fails + 1)); }
+# check <description> <command...>: the command must succeed.
+check() {
+  local d="$1"
+  shift
+  if "$@"; then ok "$d"; else bad "$d"; fi
+}
 
 cat >"$sandbox/gh" <<'EOF'
 #!/usr/bin/env bash
@@ -69,20 +75,20 @@ PATH="$sandbox:$PATH" CALLS="$calls" COUNT="$count" SLEPT="$slept" \
 status=$?
 set -e
 
-[ "$status" -eq 1 ] && ok "mixed run exits 1" || bad "mixed run exits 1 (got $status)"
-grep -q '^ok        ok-repo:' "$sandbox/out" && ok "ok repo recorded" || bad "ok repo recorded"
-grep -q '^diverged  diverged-repo' "$sandbox/out" && ok "diverged repo recorded" || bad "diverged repo recorded"
-grep -q '^retry     flaky-repo: HTTP 502' "$sandbox/out" && ok "transient failure retried" || bad "transient failure retried"
-grep -q '^ok        flaky-repo:' "$sandbox/out" && ok "flaky repo recovered" || bad "flaky repo recovered"
-grep -q '^FAILED    denied-repo: HTTP 404' "$sandbox/out" && ok "hard failure printed" || bad "hard failure printed"
+check "mixed run exits 1 (got $status)" [ "$status" -eq 1 ]
+check "ok repo recorded" grep -q '^ok        ok-repo:' "$sandbox/out"
+check "diverged repo recorded" grep -q '^diverged  diverged-repo' "$sandbox/out"
+check "transient failure retried" grep -q '^retry     flaky-repo: HTTP 502' "$sandbox/out"
+check "flaky repo recovered" grep -q '^ok        flaky-repo:' "$sandbox/out"
+check "hard failure printed" grep -q '^FAILED    denied-repo: HTTP 404' "$sandbox/out"
 # Order: denied is last, so a set -e abort would omit its FAILED line. The
 # assertion above already requires that line. Also require every repo was
 # attempted the expected number of times.
-[ "$(grep -c '^ok-repo$' "$calls")" -eq 1 ] && ok "ok repo synced once" || bad "ok repo synced once"
-[ "$(grep -c '^diverged-repo$' "$calls")" -eq 1 ] && ok "diverged repo not retried" || bad "diverged repo not retried"
-[ "$(grep -c '^flaky-repo$' "$calls")" -eq 2 ] && ok "flaky repo attempted twice" || bad "flaky repo attempted twice"
-[ "$(grep -c '^denied-repo$' "$calls")" -eq 2 ] && ok "denied repo attempted twice" || bad "denied repo attempted twice"
-grep -q '^5$' "$slept" && ok "retry pauses 5 seconds" || bad "retry pauses 5 seconds"
+check "ok repo synced once" [ "$(grep -c '^ok-repo$' "$calls")" -eq 1 ]
+check "diverged repo not retried" [ "$(grep -c '^diverged-repo$' "$calls")" -eq 1 ]
+check "flaky repo attempted twice" [ "$(grep -c '^flaky-repo$' "$calls")" -eq 2 ]
+check "denied repo attempted twice" [ "$(grep -c '^denied-repo$' "$calls")" -eq 2 ]
+check "retry pauses 5 seconds" grep -q '^5$' "$slept"
 
 printf '%s\n' ok-repo >"$sandbox/repos-ok.txt"
 : >"$calls"
@@ -91,7 +97,7 @@ PATH="$sandbox:$PATH" CALLS="$calls" COUNT="$count" SLEPT="$slept" \
   bash -e "$script" "$sandbox/repos-ok.txt" >"$sandbox/out-ok" 2>"$sandbox/err-ok"
 status=$?
 set -e
-[ "$status" -eq 0 ] && ok "all-ok run exits 0" || bad "all-ok run exits 0 (got $status)"
+check "all-ok run exits 0 (got $status)" [ "$status" -eq 0 ]
 
 if [ "$fails" -eq 0 ]; then
   echo "fleet_sync_remote_test: ALL PASS"

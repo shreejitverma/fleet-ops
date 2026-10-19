@@ -55,7 +55,7 @@ while IFS='|' read -r name branch upstream kind bins; do
   if [ ! -d "$d/.git" ]; then bad "$name: not cloned at $d"; continue; fi
 
   head=$(git -C "$d" symbolic-ref --short HEAD 2>/dev/null || echo DETACHED)
-  [ "$head" = "$branch" ] && ok "$name: on $branch" || warn "$name: on $head (default $branch)"
+  if [ "$head" = "$branch" ]; then ok "$name: on $branch"; else warn "$name: on $head (default $branch)"; fi
 
   o=$(git -C "$d" remote get-url origin 2>/dev/null || echo "")
   case "$o" in
@@ -70,13 +70,17 @@ while IFS='|' read -r name branch upstream kind bins; do
 
   a=$(git -C "$d" var GIT_AUTHOR_IDENT 2>/dev/null | sed 's/ [0-9][0-9]* [+-][0-9]*$//')
   c=$(git -C "$d" var GIT_COMMITTER_IDENT 2>/dev/null | sed 's/ [0-9][0-9]* [+-][0-9]*$//')
-  { [ "$a" = "$IDENT" ] && [ "$c" = "$IDENT" ]; } \
-    && ok "$name: identity resolves correctly" \
-    || bad "$name: identity author='$a' committer='$c'"
-  git -C "$d" config --local user.email >/dev/null 2>&1 \
-    && bad "$name: local user.email override present" || true
-  git -C "$d" config --local user.name >/dev/null 2>&1 \
-    && bad "$name: local user.name override present" || true
+  if [ "$a" = "$IDENT" ] && [ "$c" = "$IDENT" ]; then
+    ok "$name: identity resolves correctly"
+  else
+    bad "$name: identity author='$a' committer='$c'"
+  fi
+  if git -C "$d" config --local user.email >/dev/null 2>&1; then
+    bad "$name: local user.email override present"
+  fi
+  if git -C "$d" config --local user.name >/dev/null 2>&1; then
+    bad "$name: local user.name override present"
+  fi
 done < <(entries)
 
 echo "== binaries on PATH =="
@@ -139,7 +143,10 @@ if launchctl print "gui/$(id -u)/$AGENT_LABEL" >/dev/null 2>&1; then
 else
   bad "LaunchAgent $AGENT_LABEL not loaded"
 fi
-last_log=$(ls -t "$FLEET_DIR"/logs/sync-*.log 2>/dev/null | head -1)
+# sync-forks names each log sync-YYYYMMDD.log, so the glob's last match (the
+# glob sorts by name) is the newest run.
+last_log=""
+for f in "$FLEET_DIR"/logs/sync-*.log; do [ -e "$f" ] && last_log=$f; done
 if [ -n "$last_log" ]; then
   done_line=$(grep "===== done" "$last_log" | tail -1)
   if [ -z "$done_line" ]; then
