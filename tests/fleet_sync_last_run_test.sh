@@ -21,6 +21,12 @@ trap 'rm -rf "$sandbox"' EXIT
 fails=0
 ok() { printf 'ok: %s\n' "$*"; }
 bad() { printf 'FAIL: %s\n' "$*"; fails=$((fails + 1)); }
+# check <description> <command...>: the command must succeed.
+check() {
+  local d="$1"
+  shift
+  if "$@"; then ok "$d"; else bad "$d"; fi
+}
 
 url="https://github.com/shreejitverma/fleet-ops/actions/runs/39195933519"
 step=$'sync\tFast-forward every fork\'s default branch from upstream\t'
@@ -62,57 +68,65 @@ run() {
 }
 
 LIST_OUT=$'39195962900\tsuccess\t14400\thttps://example.invalid/ok' run
-[ "$status" -eq 0 ] && ok "success exits 0" || bad "success exits 0 (got $status)"
-grep -q '^ok    last server-side fleet-sync run succeeded 4h ago$' "$sandbox/out" \
-  && ok "success reported with age" || bad "success reported with age: $(cat "$sandbox/out")"
-grep -q '^\(warn\|FAIL\)' "$sandbox/out" && bad "fresh success has no warn or FAIL" || ok "fresh success has no warn or FAIL"
+check "success exits 0 (got $status)" [ "$status" -eq 0 ]
+check "success reported with age: $(cat "$sandbox/out")" \
+  grep -q '^ok    last server-side fleet-sync run succeeded 4h ago$' "$sandbox/out"
+if grep -q '^\(warn\|FAIL\)' "$sandbox/out"; then
+  bad "fresh success has no warn or FAIL"
+else
+  ok "fresh success has no warn or FAIL"
+fi
 
 LIST_OUT=$'39195933519\tfailure\t3600\t'"$url" VIEW_LOG="$sandbox/failed.log" run
-[ "$status" -eq 1 ] && ok "failed run exits 1" || bad "failed run exits 1 (got $status)"
-grep -q "^FAIL  last server-side fleet-sync run ended 'failure' 1h ago: $url\$" "$sandbox/out" \
-  && ok "failed run names its URL" || bad "failed run names its URL"
-grep -q '^FAIL  server-side sync: acp-mock: HTTP 403: .*(add the repo to the FLEET_SYNC_TOKEN repository list; see README)$' "$sandbox/out" \
-  && ok "403 repo named with token hint" || bad "403 repo named with token hint"
-grep -q '^FAIL  server-side sync: gnhf: HTTP 502: Bad Gateway$' "$sandbox/out" \
-  && ok "non-403 repo named without token hint" || bad "non-403 repo named without token hint"
-[ "$(grep -c 'acp-mock' "$sandbox/out")" -eq 1 ] && ok "retry line not reported as a failure" || bad "retry line not reported as a failure"
+check "failed run exits 1 (got $status)" [ "$status" -eq 1 ]
+check "failed run names its URL" \
+  grep -q "^FAIL  last server-side fleet-sync run ended 'failure' 1h ago: $url\$" "$sandbox/out"
+check "403 repo named with token hint" \
+  grep -q '^FAIL  server-side sync: acp-mock: HTTP 403: .*(add the repo to the FLEET_SYNC_TOKEN repository list; see README)$' "$sandbox/out"
+check "non-403 repo named without token hint" \
+  grep -q '^FAIL  server-side sync: gnhf: HTTP 502: Bad Gateway$' "$sandbox/out"
+check "retry line not reported as a failure" [ "$(grep -c 'acp-mock' "$sandbox/out")" -eq 1 ]
 
 LIST_OUT=$'39195933519\tfailure\t3600\t'"$url" VIEW_LOG="" run
-[ "$status" -eq 1 ] && ok "failed run with unreadable log still exits 1" || bad "failed run with unreadable log still exits 1 (got $status)"
-grep -q '^warn  could not list the failed repos; read: gh run view 39195933519 ' "$sandbox/out" \
-  && ok "unreadable log points at the manual command" || bad "unreadable log points at the manual command"
+check "failed run with unreadable log still exits 1 (got $status)" [ "$status" -eq 1 ]
+check "unreadable log points at the manual command" \
+  grep -q '^warn  could not list the failed repos; read: gh run view 39195933519 ' "$sandbox/out"
 
 LIST_OUT=$'2\ttimed_out\t7200\t'"$url" VIEW_LOG="$sandbox/failed.log" run
-[ "$status" -eq 1 ] && ok "timed-out run exits 1" || bad "timed-out run exits 1 (got $status)"
-grep -q "^FAIL  last server-side fleet-sync run ended 'timed_out' 2h ago: $url\$" "$sandbox/out" \
-  && ok "timed-out run names its URL" || bad "timed-out run names its URL"
-grep -q '^FAIL  server-side sync: gnhf: HTTP 502: Bad Gateway$' "$sandbox/out" \
-  && ok "timed-out run names its failed repos" || bad "timed-out run names its failed repos"
+check "timed-out run exits 1 (got $status)" [ "$status" -eq 1 ]
+check "timed-out run names its URL" \
+  grep -q "^FAIL  last server-side fleet-sync run ended 'timed_out' 2h ago: $url\$" "$sandbox/out"
+check "timed-out run names its failed repos" \
+  grep -q '^FAIL  server-side sync: gnhf: HTTP 502: Bad Gateway$' "$sandbox/out"
 
 LIST_OUT=$'3\tstartup_failure\t3600\t'"$url" VIEW_LOG="$sandbox/failed.log" run
-[ "$status" -eq 1 ] && ok "startup failure exits 1" || bad "startup failure exits 1 (got $status)"
-grep -q "^FAIL  last server-side fleet-sync run did not start 1h ago (is fleet-sync.yml valid?): $url\$" "$sandbox/out" \
-  && ok "startup failure says the workflow did not start" || bad "startup failure says the workflow did not start: $(cat "$sandbox/out")"
-grep -q 'server-side sync:' "$sandbox/out" && bad "startup failure does not parse the log" || ok "startup failure does not parse the log"
+check "startup failure exits 1 (got $status)" [ "$status" -eq 1 ]
+check "startup failure says the workflow did not start: $(cat "$sandbox/out")" \
+  grep -q "^FAIL  last server-side fleet-sync run did not start 1h ago (is fleet-sync.yml valid?): $url\$" "$sandbox/out"
+if grep -q 'server-side sync:' "$sandbox/out"; then
+  bad "startup failure does not parse the log"
+else
+  ok "startup failure does not parse the log"
+fi
 
 LIST_OUT=$'39050533541\tsuccess\t200000\thttps://example.invalid/old' run
-[ "$status" -eq 0 ] && ok "stale success exits 0" || bad "stale success exits 0 (got $status)"
-grep -q '^warn  no fleet-sync run has completed for 55h; the daily schedule may have stopped' "$sandbox/out" \
-  && ok "stale run warned" || bad "stale run warned"
+check "stale success exits 0 (got $status)" [ "$status" -eq 0 ]
+check "stale run warned" \
+  grep -q '^warn  no fleet-sync run has completed for 55h; the daily schedule may have stopped' "$sandbox/out"
 
 LIST_OUT=$'1\tcancelled\t100\thttps://example.invalid/c' run
-[ "$status" -eq 0 ] && ok "cancelled run exits 0" || bad "cancelled run exits 0 (got $status)"
-grep -q "^warn  last server-side fleet-sync run ended 'cancelled'" "$sandbox/out" \
-  && ok "cancelled run warned" || bad "cancelled run warned"
+check "cancelled run exits 0 (got $status)" [ "$status" -eq 0 ]
+check "cancelled run warned" \
+  grep -q "^warn  last server-side fleet-sync run ended 'cancelled'" "$sandbox/out"
 
 LIST_OUT=none run
-[ "$status" -eq 0 ] && ok "no runs exits 0" || bad "no runs exits 0 (got $status)"
-grep -q '^warn  no completed fleet-sync run' "$sandbox/out" && ok "no runs warned" || bad "no runs warned"
+check "no runs exits 0 (got $status)" [ "$status" -eq 0 ]
+check "no runs warned" grep -q '^warn  no completed fleet-sync run' "$sandbox/out"
 
 LIST_OUT="" LIST_STATUS=1 run
-[ "$status" -eq 0 ] && ok "unreachable GitHub exits 0" || bad "unreachable GitHub exits 0 (got $status)"
-grep -q '^warn  could not read fleet-sync runs from shreejitverma/fleet-ops: HTTP 401: Bad credentials' "$sandbox/out" \
-  && ok "unreachable GitHub warns with the real error" || bad "unreachable GitHub warns with the real error"
+check "unreachable GitHub exits 0 (got $status)" [ "$status" -eq 0 ]
+check "unreachable GitHub warns with the real error" \
+  grep -q '^warn  could not read fleet-sync runs from shreejitverma/fleet-ops: HTTP 401: Bad credentials' "$sandbox/out"
 
 if [ "$fails" -eq 0 ]; then
   echo "fleet_sync_last_run_test: ALL PASS"
