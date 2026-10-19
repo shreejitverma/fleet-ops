@@ -19,5 +19,7 @@ jobs:
         run: shellcheck bootstrap.sh doctor.sh gen-aliases.sh bin/*.sh tests/*.sh
       - name: Fast-forward loop keeps going after one fork fails
         run: bash tests/fleet_sync_remote_test.sh
+      - name: Doctor reports a failed server-side sync run
+        run: bash tests/fleet_sync_last_run_test.sh
       - name: Pi Launcher installer verifies the signed cask
         run: bash tests/install_pi_launcher_test.sh
