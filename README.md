@@ -31,6 +31,8 @@ One line each, learned from the repos themselves, not their names.
 | gnhf | Overnight agent-run manager ("good night, have fun"). |
 | wheelhouse | IssueOps command center running on GitHub Actions; fork state tracked in its manifest notes. |
 | compact-adviser | Agent plugin that hints when a session is at a safe point to `/compact` (TypeSafe Jev judge); wired into Claude Code and Grok, no PATH bin. |
+| acp-mock | Deterministic ACP agent over stdio, the token-free test double for ACP clients; `acp-mock` is npm-linked, while gnhf and baby-menu consume the npm package. |
+| pi-launcher | Signed, notarized macOS app that runs the bundled official Pi as `pi-signed` (firstmate's `pi-signed` harness); installed from `kunchenguid/tap`, never built from the clone. |
 
 ## Aliases
 
@@ -38,7 +40,7 @@ Generated into `aliases.zsh` by `gen-aliases.sh` from the manifest; sourced by
 `dotfiles-nix/files/zsh/ic-workflow.zsh` (interactive shells only). Never hand-edit
 `aliases.zsh`; edit the manifest's `aliases:` fields and re-run `gen-aliases.sh`.
 
-Jump aliases: `cdlav cdfm cdnm cdaxi cdcda cdgha cdap cdbm cdta cdqa cdth cdsp cdtbc cdjr cdpz cdob cdsb cdpb cddot cdgnhf cdwh cdca`.
+Jump aliases: `cdlav cdfm cdnm cdaxi cdcda cdgha cdap cdbm cdta cdqa cdth cdsp cdtbc cdjr cdpz cdob cdsb cdpb cddot cdgnhf cdwh cdca cdacp cdpil`.
 Run aliases (only defined when the binary exists): `lav gha ap jr` new, plus the pre-existing `nm cda ta qa th gn` from ic-workflow.zsh (`nm` deliberately shadows `/usr/bin/nm`).
 Fleet commands: `fleet-sync`, `fleet-sync-dry`, `fleet-doctor`, `fleet-status`, `fleet-cd`.
 `fleet-doctor` (`./doctor.sh`) also checks that `grok` on PATH is xAI Grok Build (not Homebrew's unrelated regex tool of the same name), that the only copy is `~/.local/bin/grok` (the official installer; a second npm copy is a FAIL), and that `~/.grok/AGENTS.md` is the separate personal-layer file from `~/github/agents/GROK.md`, not Claude's `~/AGENTS.md`.
@@ -55,6 +57,21 @@ Two layers, no duplicates, forks stay pristine mirrors:
 `firstmate` is `sync: false` for the same reason since 2026-09-19: its fork carries fork-specific commits that are not contributed to the parent, so parent updates arrive through a deliberate sync-upstream merge PR on the fork.
 Neither sync layer touches `sync: false` forks.
 `doctor.sh` warns when the last local sync log's done line lists them in a non-empty `manual:[...]` field (behind upstream); `sync-forks` does not emit that field yet, so the check stays silent until it does.
+
+## Signed Pi Launcher
+
+`pi-launcher` is the one fleet repo whose installed artifact is not built from its clone.
+Its value is the notarized Developer ID identity (Team `9T2J7MNUP9`), and `make app` in the clone builds an unsigned dev app.
+The clone is the audited source and the version pin; the manifest `install` is `bin/install-pi-launcher.sh`, which installs or upgrades the `kunchenguid/tap/pi-launcher` cask.
+When the tap lags the fork's release, it refreshes the taps once and retries.
+It then verifies the cask version against the fork's `.release-please-manifest.json`, that `pi-signed` links into `/Applications/Pi Launcher.app`, the code signature, the Team ID, the bundle id, Gatekeeper, and that the bundled Pi matches `packaging/pi-release.json`.
+`doctor.sh` runs the same checks read-only with `--check`, and `tests/install_pi_launcher_test.sh` covers the decision logic with stubbed `brew`, `codesign`, and `spctl` in CI.
+If a sync lands a release commit before the tap publishes it, the reinstall fails and notifies once; rerun `bin/install-pi-launcher.sh` later, or let `up`'s `brew upgrade` catch up.
+
+GitHub Actions is disabled on the `acp-mock` and `pi-launcher` forks.
+Their upstream workflows commit to `main` on their own: release-please on push, and pi-launcher's daily Pi-pin cron auto-merges its release PR.
+On a mirror, either would diverge the fork and break ff-only sync.
+Re-enable with `gh api -X PUT repos/shreejitverma/<repo>/actions/permissions -F enabled=true`.
 
 ## Logs
 

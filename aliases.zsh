@@ -40,6 +40,8 @@ alias cdgnhf='cd $HOME/github/gnhf'
 command -v gnhf >/dev/null && alias gn=gnhf
 alias cdwh='cd $HOME/github/wheelhouse'
 alias cdca='cd $HOME/github/compact-adviser'
+alias cdacp='cd $HOME/github/acp-mock'
+alias cdpil='cd $HOME/github/pi-launcher'
 
 # --- fleet commands ---
 alias fleet-sync='sync-forks'
