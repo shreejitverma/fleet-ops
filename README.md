@@ -64,7 +64,7 @@ Neither sync layer touches `sync: false` forks.
 Its value is the notarized Developer ID identity (Team `9T2J7MNUP9`), and `make app` in the clone builds an unsigned dev app.
 The clone is the audited source and the version pin; the manifest `install` is `bin/install-pi-launcher.sh`, which installs or upgrades the `kunchenguid/tap/pi-launcher` cask.
 When the tap lags the fork's release, it refreshes the taps once and retries.
-It then verifies the cask version against the fork's `.release-please-manifest.json`, that `pi-signed` links into `/Applications/Pi Launcher.app`, the code signature, the Team ID, the bundle id, Gatekeeper, and that the bundled Pi matches `packaging/pi-release.json`.
+It then verifies the cask version against the fork's `.release-please-manifest.json`, that `pi-signed` links into `/Applications/Pi Launcher.app`, the code signature, the Team ID, the bundle id, Gatekeeper, and, when the cask is exactly the fork's release, that the bundled Pi matches `packaging/pi-release.json` at the fork's release tag `v<version>` (HEAD may already pin the next Pi); a missing tag only warns.
 `doctor.sh` runs the same checks read-only with `--check`, and `tests/install_pi_launcher_test.sh` covers the decision logic with stubbed `brew`, `codesign`, and `spctl` in CI.
 If a sync lands a release commit before the tap publishes it, the reinstall fails and notifies once; rerun `bin/install-pi-launcher.sh` later, or let `up`'s `brew upgrade` catch up.
 

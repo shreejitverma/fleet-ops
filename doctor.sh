@@ -196,7 +196,7 @@ fi
 echo "== pi-launcher (signed identity) =="
 # The installed app, not the clone, is the product: a stale or re-signed
 # cask would silently hand firstmate's pi-signed harness the wrong identity.
-# bin/install-pi-launcher.sh owns every check and prints ok/FAIL lines.
+# bin/install-pi-launcher.sh owns every check and prints ok/warn/FAIL lines.
 if grep -q '^- name: pi-launcher$' "$MANIFEST"; then
   pil_status=0
   pil_out=$("$FLEET_DIR/bin/install-pi-launcher.sh" --check </dev/null 2>&1) || pil_status=$?

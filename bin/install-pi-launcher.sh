@@ -11,7 +11,7 @@
 # Usage:
 #   install-pi-launcher.sh          install or upgrade, then verify (manifest install)
 #   install-pi-launcher.sh --check  verify only, changes nothing (doctor.sh)
-# Prints one "ok"/"FAIL" line per check and exits 1 on any FAIL.
+# Prints one "ok"/"warn"/"FAIL" line per check and exits 1 on any FAIL.
 set -uo pipefail
 
 CASK="kunchenguid/tap/pi-launcher"
@@ -31,6 +31,7 @@ esac
 
 fail=0
 ok() { printf 'ok    %s\n' "$*"; }
+warn() { printf 'warn  %s\n' "$*"; }
 bad() {
   printf 'FAIL  %s\n' "$*"
   fail=1
@@ -38,9 +39,8 @@ bad() {
 
 # release-please (simple strategy) records the released version under ".".
 want=$(sed -n 's/^ *"\.": *"\([^"]*\)".*/\1/p' "$CLONE/.release-please-manifest.json" 2>/dev/null)
-pin=$(sed -n 's/^ *"version": *"\([^"]*\)".*/\1/p' "$CLONE/packaging/pi-release.json" 2>/dev/null)
-if [ -z "$want" ] || [ -z "$pin" ]; then
-  bad "cannot read the pinned versions from $CLONE (.release-please-manifest.json, packaging/pi-release.json)"
+if [ -z "$want" ]; then
+  bad "cannot read the fork's release version from $CLONE/.release-please-manifest.json"
   exit 1
 fi
 
@@ -111,16 +111,20 @@ else
   bad "Gatekeeper rejects $app"
 fi
 
-# The bundled Pi matches the fork's pin only when the cask is exactly the
-# fork's release; a newer cask (brew upgrade via `up`) bundles a newer Pi.
-if pi_v=$("$bin" --version </dev/null 2>/dev/null); then
-  if [ "$have" = "$want" ] && [ "$pi_v" != "$pin" ]; then
-    bad "bundled Pi is $pi_v, the fork's packaging/pi-release.json pins $pin"
-  else
-    ok "pi-signed runs bundled Pi $pi_v"
-  fi
-else
+# The cask at exactly the fork's release bundles the Pi pinned at that
+# release's tag (v<version>). HEAD can pin the next Pi before the release
+# commit lands, and a newer cask (brew upgrade via `up`) bundles a newer Pi.
+if ! pi_v=$("$bin" --version </dev/null 2>/dev/null); then
   bad "pi-signed --version failed"
+elif [ "$have" != "$want" ]; then
+  ok "pi-signed runs bundled Pi $pi_v"
+elif ! pin=$(git -C "$CLONE" show "v$want:packaging/pi-release.json" 2>/dev/null \
+  | sed -n 's/^ *"version": *"\([^"]*\)".*/\1/p') || [ -z "$pin" ]; then
+  warn "pi-signed runs bundled Pi $pi_v; no packaging/pi-release.json pin at tag v$want in $CLONE, comparison skipped"
+elif [ "$pi_v" != "$pin" ]; then
+  bad "bundled Pi is $pi_v, the fork's release tag v$want pins $pin in packaging/pi-release.json"
+else
+  ok "pi-signed runs bundled Pi $pi_v (pinned at v$want)"
 fi
 
 exit "$fail"

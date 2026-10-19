@@ -366,7 +366,7 @@
   kind: cli
   toolchain: [homebrew-cask, clang, python3]
   install: "$HOME/github/.fleet/bin/install-pi-launcher.sh"
-  install_mechanism: "Homebrew cask kunchenguid/tap/pi-launcher: /Applications/Pi Launcher.app plus the /opt/homebrew/bin/pi-signed binary link. Never built from this clone: make app produces an unsigned dev app, and the product is the notarized Developer ID identity (Team 9T2J7MNUP9). bin/install-pi-launcher.sh installs or upgrades the cask, refreshes the taps once when the tap lags the fork's release, then verifies the cask version against the fork's .release-please-manifest.json, the pi-signed link, the code signature, Team ID, bundle id, Gatekeeper, and that the bundled Pi matches packaging/pi-release.json. doctor.sh runs it with --check. up's brew upgrade also upgrades the cask."
+  install_mechanism: "Homebrew cask kunchenguid/tap/pi-launcher: /Applications/Pi Launcher.app plus the /opt/homebrew/bin/pi-signed binary link. Never built from this clone: make app produces an unsigned dev app, and the product is the notarized Developer ID identity (Team 9T2J7MNUP9). bin/install-pi-launcher.sh installs or upgrades the cask, refreshes the taps once when the tap lags the fork's release, then verifies the cask version against the fork's .release-please-manifest.json, the pi-signed link, the code signature, Team ID, bundle id, Gatekeeper, and, when the cask is exactly the fork's release, that the bundled Pi matches packaging/pi-release.json at the fork's release tag v<version> (HEAD may already pin the next Pi); a missing tag only warns. doctor.sh runs it with --check. up's brew upgrade also upgrades the cask."
   provides_bin: [pi-signed]
   aliases: {jump: cdpil}
   sync: true
