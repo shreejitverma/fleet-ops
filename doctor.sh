@@ -75,10 +75,12 @@ while IFS='|' read -r name branch upstream kind bins; do
   else
     bad "$name: identity author='$a' committer='$c'"
   fi
-  git -C "$d" config --local user.email >/dev/null 2>&1 \
-    && bad "$name: local user.email override present" || true
-  git -C "$d" config --local user.name >/dev/null 2>&1 \
-    && bad "$name: local user.name override present" || true
+  if git -C "$d" config --local user.email >/dev/null 2>&1; then
+    bad "$name: local user.email override present"
+  fi
+  if git -C "$d" config --local user.name >/dev/null 2>&1; then
+    bad "$name: local user.name override present"
+  fi
 done < <(entries)
 
 echo "== binaries on PATH =="
