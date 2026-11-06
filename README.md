@@ -99,6 +99,7 @@ The repository is public, and that is safe by construction, so keep it that way 
 
 Being public is also what keeps the daily sync and CI off the free plan's Actions minutes.
 Making it private would not withdraw the existing public fork, and it would start drawing on those minutes.
+
 On a fresh machine, apply the dotfiles-nix rebuild (nix plus the base toolchain) manually before `bootstrap.sh` can fully succeed; bootstrap reports failures honestly and converges over re-runs.
 
 ## Disable sync
