@@ -1,5 +1,4 @@
-# Deployed copy: this file is the source for .github/workflows/fleet-sync.yml
-# in the private shreejitverma/fleet-ops repo (server-side sync layer).
+# Server-side sync layer of the public shreejitverma/fleet-ops repo.
 # The per-fork rollout was rejected by design: a workflow commit on a fork's
 # default branch permanently diverges it from upstream, breaking ff-only sync.
 # One central repo loops all forks instead; forks stay pristine mirrors.
