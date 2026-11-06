@@ -34,6 +34,7 @@ One line each, learned from the repos themselves, not their names.
 | acp-mock | Deterministic ACP agent over stdio, the token-free test double for ACP clients; `acp-mock` is npm-linked, while gnhf and baby-menu consume the npm package. |
 | pi-launcher | Signed, notarized macOS app that runs the bundled official Pi as `pi-signed` (firstmate's `pi-signed` harness); installed from `kunchenguid/tap`, never built from the clone. |
 | archify | Agent skill (parent `tt-a1i/archify`) that turns a description, Mermaid, or a traced repository into validated interactive HTML diagrams and one-page explainers; runs from the clone, linked into every agent by `ic-link`, no PATH bin. |
+| runner-up | Go CLI that runs GitHub Actions jobs on your own machines, one fresh container, VM, or account per job, through runner scale sets and SSH; installed to `~/go/bin`, with no coordinator set up on this Mac yet (see its manifest notes). |
 
 ## Aliases
 
@@ -41,7 +42,7 @@ Generated into `aliases.zsh` by `gen-aliases.sh` from the manifest; sourced by
 `dotfiles-nix/files/zsh/ic-workflow.zsh` (interactive shells only). Never hand-edit
 `aliases.zsh`; edit the manifest's `aliases:` fields and re-run `gen-aliases.sh`.
 
-Jump aliases: `cdlav cdfm cdnm cdaxi cdcda cdgha cdap cdbm cdta cdqa cdth cdsp cdtbc cdjr cdpz cdob cdsb cdpb cddot cdgnhf cdwh cdca cdacp cdpil cdarch`.
+Jump aliases: `cdlav cdfm cdnm cdaxi cdcda cdgha cdap cdbm cdta cdqa cdth cdsp cdtbc cdjr cdpz cdob cdsb cdpb cddot cdgnhf cdwh cdca cdacp cdpil cdarch cdru`.
 Run aliases (only defined when the binary exists): `lav gha ap jr` new, plus the pre-existing `nm cda ta qa th gn` from ic-workflow.zsh (`nm` deliberately shadows `/usr/bin/nm`).
 Fleet commands: `fleet-sync`, `fleet-sync-dry`, `fleet-doctor`, `fleet-status`, `fleet-cd`.
 `fleet-doctor` (`./doctor.sh`) also checks that `grok` on PATH is xAI Grok Build (not Homebrew's unrelated regex tool of the same name), that the only copy is `~/.local/bin/grok` (the official installer; a second npm copy is a FAIL), and that `~/.grok/AGENTS.md` is the separate personal-layer file from `~/github/agents/GROK.md`, not Claude's `~/AGENTS.md`.
@@ -69,7 +70,7 @@ It then verifies the cask version against the fork's `.release-please-manifest.j
 `doctor.sh` runs the same checks read-only with `--check`, and `tests/install_pi_launcher_test.sh` covers the decision logic with stubbed `brew`, `codesign`, and `spctl` in CI.
 If a sync lands a release commit before the tap publishes it, the reinstall fails and notifies once; rerun `bin/install-pi-launcher.sh` later, or let `up`'s `brew upgrade` catch up.
 
-GitHub Actions is disabled on the `acp-mock` and `pi-launcher` forks.
+GitHub Actions is disabled on the `acp-mock`, `pi-launcher`, and `runner-up` forks.
 Their upstream workflows commit to `main` on their own: release-please on push, and pi-launcher's daily Pi-pin cron auto-merges its release PR.
 On a mirror, either would diverge the fork and break ff-only sync.
 Re-enable with `gh api -X PUT repos/shreejitverma/<repo>/actions/permissions -F enabled=true`.

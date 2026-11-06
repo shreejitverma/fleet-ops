@@ -43,6 +43,7 @@ alias cdca='cd $HOME/github/compact-adviser'
 alias cdacp='cd $HOME/github/acp-mock'
 alias cdpil='cd $HOME/github/pi-launcher'
 alias cdarch='cd $HOME/github/archify'
+alias cdru='cd $HOME/github/runner-up'
 
 # --- fleet commands ---
 alias fleet-sync='sync-forks'
