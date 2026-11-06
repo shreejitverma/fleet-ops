@@ -81,7 +81,9 @@ Re-enable with `gh api -X PUT repos/shreejitverma/<repo>/actions/permissions -F 
 macOS minutes bill at ten times Linux minutes on that private repository, and those two jobs are about half of each CI run's billed minutes.
 
 - Coordinator: the launchd agent `org.nix-community.home.runner-up` from `dotfiles-nix/nix/home/darwin.nix`, running `~/go/bin/runner-up serve` while `~/Library/Application Support/runner-up/config.json` exists; log at `~/Library/Logs/runner-up.log`.
-- Setup: pool `cryozen-macos`, two tart places of 4 cores and 8192 MB cloning `ghcr.io/cirruslabs/macos-tahoe-base:latest`, 4 cores and 12288 MB always kept for the owner, and a one-hour job cap.
+- Setup: pool `cryozen-macos`, two tart places of 4 cores and 8192 MB cloning the local image `ci-tahoe`, 4 cores and 12288 MB always kept for the owner, and a one-hour job cap.
+- Image: `bin/bake-runner-up-image.sh` builds `ci-tahoe` from `ghcr.io/cirruslabs/macos-tahoe-base:latest` with the guest DNS set to public resolvers, because with Cloudflare WARP on the host a guest's default resolver never answers and the runner fails with `Socket Error: HostNotFound`.
+  It checks the candidate resolves GitHub's runner broker and reaches the GitHub API before swapping it in; rerun it after Cirrus Labs updates the base image, with at most one job running (macOS allows two VMs at once).
 - Routing: cryozen's `ci.yml` sends those jobs to the pool named by the repository variable `CRYOZEN_MACOS_RUNNER` and to hosted `macos-latest` when it is unset.
 - While this Mac is asleep or offline those jobs wait at GitHub, so before a trip run `gh variable delete CRYOZEN_MACOS_RUNNER -R cryozenai/cryozen`, and `gh variable set CRYOZEN_MACOS_RUNNER -R cryozenai/cryozen -b cryozen-macos` on return.
 - Updates: `sync-forks` reruns `bin/install-runner-up.sh` after a fast-forward, which rebuilds and restarts a running coordinator; running jobs carry on through the restart.
