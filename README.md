@@ -91,10 +91,12 @@ Re-enable with `gh api -X PUT repos/shreejitverma/<repo>/actions/permissions -F 
 
 This directory IS the `shreejitverma/fleet-ops` repo: manifest, scripts, identity files, and the server-side workflow are all version-controlled together. `logs/` and backups stay untracked.
 The repository is public, and that is safe by construction, so keep it that way only while these hold:
+
 - Nothing secret is tracked: the identity email and the signing public key are already public on GitHub, and `gitleaks git .` found no leaks across the full history on 2026-11-06.
 - `FLEET_SYNC_TOKEN` is read only by `fleet-sync.yml`, which runs on `schedule` and `workflow_dispatch` (repository writers only), never on `pull_request` or `pull_request_target`.
 - `ci.yml` runs with `contents: read`, the default workflow token is read-only, and pull requests from forks never receive secrets.
 - Workflow runs from every outside contributor's pull request wait for approval (`fork-pr-contributor-approval` set to `all_external_contributors` on 2026-11-06).
+
 Being public is also what keeps the daily sync and CI off the free plan's Actions minutes.
 Making it private would not withdraw the existing public fork, and it would start drawing on those minutes.
 On a fresh machine, apply the dotfiles-nix rebuild (nix plus the base toolchain) manually before `bootstrap.sh` can fully succeed; bootstrap reports failures honestly and converges over re-runs.
