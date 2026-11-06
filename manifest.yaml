@@ -385,3 +385,20 @@
   aliases: {jump: cdarch}
   sync: true
   notes: "Interactive HTML diagrams (architecture, workflow, sequence, dataflow, lifecycle, ERD, class, tree, timeline, waterfall) and one-page explainers, validated and browser-checked. Fleet sync is its update path, never npx skills add or update: that would write a real copy over the link, which ic-link then refuses to replace. Its own update reminder is switched off with ARCHIFY_UPDATE_CHECK_DISABLED=1 in dotfiles-nix home.sessionVariables for that reason. The explainer mode is pinned to on-demand in the agents repo ROUTING.md, because the skill otherwise offers to append a proactive rules line to ~/.claude/CLAUDE.md, which is a generated manual. The repo-local .agents/skills (archify-review, archify-tuning, simplify-codebase, test-value) are for contributing to archify itself and are deliberately not linked globally. Upstream also ships integrations/hermes-agent and integrations/deepseek-harness; neither harness is wired on this Mac."
+
+# --- Harness dependencies added 2026-11-06 ---
+
+- name: runner-up
+  owner: shreejitverma
+  is_fork: true
+  upstream: kunchenguid/runner-up
+  default_branch: main
+  path: ~/github/runner-up
+  kind: cli
+  toolchain: [go]
+  install: "make build VERSION=$(git describe --tags --always) && install -d $HOME/go/bin && install -m 755 runner-up $HOME/go/bin/runner-up"
+  install_mechanism: "build + install to go/bin, as for no-mistakes and treehouse: upstream's make install uses the make-level $(GOPATH), unset under launchd, and would fall back to /usr/local/bin. VERSION comes from git describe so runner-up version names the synced commit (v0.1.12-1-g3188c4b on 2026-11-06) instead of dev. The built ./runner-up is gitignored, so the clone stays clean for ff-only sync."
+  provides_bin: [runner-up]
+  aliases: {jump: cdru}
+  sync: true
+  notes: "Self-hosted GitHub Actions runners on your own machines through runner scale sets: one coordinator (Linux or macOS) starts a one-job runner per job in a fresh Docker or KVM place on Linux, a tart clone or Apple container guest on a Mac, or an account or Hyper-V VM on Windows, reaching each machine's agent over SSH; it stores no token and asks gh auth token per session. Joined 2026-11-06 as fleet + skill only: no setup file and no coordinator service exist on this Mac, so it changes nothing on GitHub or in any repo's CI; the runner-up skill (dotfiles-nix files/skills/runner-up) tells agents to report that and never run init, machine add, serve, update, borrow or drain on their own. agent probe on 2026-11-06: 12 cores, 36864 MB, docker and host ok, tart and Apple container not installed. If a coordinator is set up later, choose ONE update path: this fleet build (supervisor starts ~/go/bin/runner-up) or the setup's release field (supervisor starts stateDir/program/current, which self-updates to upstream's signed releases); mixing them lets the coordinator replace the fleet build. GitHub Actions is disabled on the fork (2026-11-06): upstream's release.yml runs release-please on push to main and would open release PRs on the mirror, and update-vendor-hash.yml pushes to PR branches."
