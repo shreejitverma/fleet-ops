@@ -34,7 +34,7 @@ One line each, learned from the repos themselves, not their names.
 | acp-mock | Deterministic ACP agent over stdio, the token-free test double for ACP clients; `acp-mock` is npm-linked, while gnhf and baby-menu consume the npm package. |
 | pi-launcher | Signed, notarized macOS app that runs the bundled official Pi as `pi-signed` (firstmate's `pi-signed` harness); installed from `kunchenguid/tap`, never built from the clone. |
 | archify | Agent skill (parent `tt-a1i/archify`) that turns a description, Mermaid, or a traced repository into validated interactive HTML diagrams and one-page explainers; runs from the clone, linked into every agent by `ic-link`, no PATH bin. |
-| runner-up | Go CLI that runs GitHub Actions jobs on your own machines, one fresh container, VM, or account per job, through runner scale sets and SSH; installed to `~/go/bin`, with no coordinator set up on this Mac yet (see its manifest notes). |
+| runner-up | Go CLI that runs GitHub Actions jobs on your own machines, one fresh container, VM, or account per job, through runner scale sets; built into `~/go/bin` by `bin/install-runner-up.sh`, and this Mac's coordinator runs cryozen's Apple-silicon macOS CI in fresh tart clones (see "runner-up coordinator" below). |
 
 ## Aliases
 
@@ -74,6 +74,23 @@ GitHub Actions is disabled on the `acp-mock`, `pi-launcher`, and `runner-up` for
 Their upstream workflows commit to `main` on their own: release-please on push, and pi-launcher's daily Pi-pin cron auto-merges its release PR.
 On a mirror, either would diverge the fork and break ff-only sync.
 Re-enable with `gh api -X PUT repos/shreejitverma/<repo>/actions/permissions -F enabled=true`.
+
+## runner-up coordinator
+
+`runner-up` serves `cryozenai/cryozen`'s two Apple-silicon `macos-latest` CI jobs from this Mac, each in a fresh tart clone of macOS 26 that is deleted when the job ends.
+macOS minutes bill at ten times Linux minutes on that private repository, and those two jobs are about half of each CI run's billed minutes.
+
+- Coordinator: the launchd agent `org.nix-community.home.runner-up` from `dotfiles-nix/nix/home/darwin.nix`, running `~/go/bin/runner-up serve` while `~/Library/Application Support/runner-up/config.json` exists; log at `~/Library/Logs/runner-up.log`.
+- Setup: pool `cryozen-macos`, two tart places of 4 cores and 8192 MB cloning the local image `ci-tahoe`, 4 cores and 12288 MB always kept for the owner, and a one-hour job cap.
+- Image: `bin/bake-runner-up-image.sh` builds `ci-tahoe` from `ghcr.io/cirruslabs/macos-tahoe-base:latest` with the guest DNS set to public resolvers, because with Cloudflare WARP on the host a guest's default resolver never answers and the runner fails with `Socket Error: HostNotFound`.
+  It checks the candidate resolves GitHub's runner broker and reaches the GitHub API before swapping it in; rerun it after Cirrus Labs updates the base image, with at most one job running (macOS allows two VMs at once).
+- Routing: cryozen's `ci.yml` sends those jobs to the pool named by the repository variable `CRYOZEN_MACOS_RUNNER` and to hosted `macos-latest` when it is unset.
+- While this Mac is asleep or offline those jobs wait at GitHub, so before a trip run `gh variable delete CRYOZEN_MACOS_RUNNER -R cryozenai/cryozen`, and `gh variable set CRYOZEN_MACOS_RUNNER -R cryozenai/cryozen -b cryozen-macos` on return.
+- Updates: `sync-forks` reruns `bin/install-runner-up.sh` after a fast-forward, which rebuilds and restarts a running coordinator; running jobs carry on through the restart.
+  The setup names no `release`, so the coordinator never replaces the fleet build with a downloaded one.
+- Health: `doctor.sh` runs `bin/install-runner-up.sh --check` (installed build matches the clone, `check-config` passes, coordinator running); `runner-up status` shows places and waiting jobs, and `runner-up usage` shows each job's sampled peak use for pool sizing.
+- Stop entirely: delete the repository variable first, then move the setup file away; launchd stops the coordinator once the file is gone.
+- tart comes from the official tap `openai/tools` (`cirruslabs/tart` moved to `openai/tart`); the old `cirruslabs/cli` tap is stale and fails under current Homebrew.
 
 ## Logs
 

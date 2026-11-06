@@ -18,6 +18,9 @@
 #   smoke: every CLI answers --version or --help with exit 0
 #   grok: PATH grok is xAI Grok Build at ~/.local/bin/grok only (a second copy
 #     is a FAIL); ~/.grok/AGENTS.md is the personal-layer GROK.md, not Claude's
+#   runner-up: the installed build matches the clone and, when a setup file
+#     exists, check-config passes and the coordinator agent runs
+#     (bin/install-runner-up.sh --check)
 #   pi-launcher: the pi-signed cask is the notarized Team 9T2J7MNUP9 build at
 #     or past the fork's release (bin/install-pi-launcher.sh --check)
 set -uo pipefail
@@ -221,6 +224,17 @@ if grep -q '^- name: pi-launcher$' "$MANIFEST"; then
   pil_out=$("$FLEET_DIR/bin/install-pi-launcher.sh" --check </dev/null 2>&1) || pil_status=$?
   printf '%s\n' "$pil_out" | sed 's/^/  /'
   [ "$pil_status" -eq 0 ] || fail=1
+fi
+
+echo "== runner-up (coordinator) =="
+# A setup file means jobs are routed here, so a coordinator that is not
+# running, or a setup check-config refuses, leaves CI queued at GitHub.
+# bin/install-runner-up.sh owns every check and prints ok/warn/FAIL lines.
+if grep -q '^- name: runner-up$' "$MANIFEST"; then
+  ru_status=0
+  ru_out=$("$FLEET_DIR/bin/install-runner-up.sh" --check </dev/null 2>&1) || ru_status=$?
+  printf '%s\n' "$ru_out" | sed 's/^/  /'
+  [ "$ru_status" -eq 0 ] || fail=1
 fi
 
 echo "== smoke =="
