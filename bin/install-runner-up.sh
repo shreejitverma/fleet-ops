@@ -74,7 +74,11 @@ if [ "$mode" = install ]; then
       bad "launchctl kickstart -k $SERVICE failed; the coordinator still runs the old build"
     fi
   elif agent_loaded; then
-    ok "coordinator agent loaded and idle (no setup file), nothing to restart"
+    if [ -f "$SETUP" ]; then
+      warn "coordinator agent loaded but not running although the setup exists (see ~/Library/Logs/runner-up.log)"
+    else
+      ok "coordinator agent loaded and idle (no setup file), nothing to restart"
+    fi
   elif [ -f "$SETUP" ]; then
     warn "a setup file exists but the coordinator agent is not loaded (rebuild dotfiles-nix)"
   fi

@@ -113,6 +113,15 @@ if [ "$status" -eq 0 ] && ! called kickstart && printf '%s' "$out" | grep -q '^w
 else
   bad "install with no agent and a setup (status $status): $out"
 fi
+
+# 3b. Install with a loaded but stopped agent and a setup file: warns, does not restart.
+AGENT=idle
+run
+if [ "$status" -eq 0 ] && ! called kickstart && printf '%s' "$out" | grep -q '^warn .*not running although the setup exists'; then
+  ok "install warns when a setup exists but the loaded agent is not running"
+else
+  bad "install with a stopped agent and a setup (status $status): $out"
+fi
 rm -f "$setup"
 
 # 4. A failed build installs and restarts nothing.
@@ -174,6 +183,7 @@ else
 fi
 
 # 10. --check warns when the installed build lags the clone.
+g commit -q --allow-empty -m next
 g tag -a v0.1.13 -m v0.1.13
 run --check
 if [ "$status" -eq 0 ] && printf '%s' "$out" | grep -q '^warn .*v0.1.12 but the clone is at v0.1.13'; then

@@ -17,14 +17,20 @@
 # It needs one free macOS VM slot (macOS runs at most two at once, and a
 # busy runner-up place holds one), so run it while at most one job runs.
 #
-# Usage: bake-runner-up-image.sh [BASE_IMAGE] [IMAGE_NAME]
-#   BASE_IMAGE defaults to ghcr.io/cirruslabs/macos-tahoe-base:latest
-#   IMAGE_NAME defaults to ci-tahoe (the setup's places name it as "image")
+# Usage: bake-runner-up-image.sh
+#   bakes ci-tahoe (the setup's places name it as "image") from
+#   ghcr.io/cirruslabs/macos-tahoe-base:latest; takes no arguments.
 set -euo pipefail
 
-BASE="${1:-ghcr.io/cirruslabs/macos-tahoe-base:latest}"
-NAME="${2:-ci-tahoe}"
+if [ "$#" -ne 0 ]; then
+  echo "usage: $0 (takes no arguments)" >&2
+  exit 2
+fi
+
+BASE="ghcr.io/cirruslabs/macos-tahoe-base:latest"
+NAME="ci-tahoe"
 NEXT="$NAME-next"
+OLD="$NAME-old"
 DNS_SERVERS=(1.1.1.1 1.0.0.1 8.8.8.8)
 
 command -v tart >/dev/null || {
@@ -75,7 +81,15 @@ echo "guest resolves GitHub and reaches its API"
 
 tart exec "$NEXT" sudo -n sync
 tart stop "$NEXT"
-if vm_exists "$NAME"; then tart delete "$NAME"; fi
-tart rename "$NEXT" "$NAME"
+if vm_exists "$OLD"; then tart delete "$OLD"; fi
+if vm_exists "$NAME"; then tart rename "$NAME" "$OLD"; fi
+if ! tart rename "$NEXT" "$NAME"; then
+  if vm_exists "$OLD"; then tart rename "$OLD" "$NAME"; fi
+  echo "could not rename $NEXT to $NAME; kept the previous image" >&2
+  exit 1
+fi
 trap - EXIT
 echo "baked $NAME from $BASE"
+if vm_exists "$OLD"; then
+  tart delete "$OLD" || echo "could not delete the previous image $OLD; delete it by hand" >&2
+fi
