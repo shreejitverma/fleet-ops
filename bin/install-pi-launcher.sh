@@ -53,19 +53,19 @@ if [ "$mode" = install ]; then
   # can still exit 1 after the upgrade completed (seen 2026-11-10 on a
   # connection reset). The checks below verify the installed result and are
   # what decide pass or fail.
-  if [ -z "$(cask_version)" ]; then
-    brew install --cask "$CASK" || warn "brew install --cask $CASK exited nonzero"
-  else
-    brew upgrade --cask "$CASK" || warn "brew upgrade --cask $CASK exited nonzero"
-  fi
+  install_or_upgrade() {
+    local verb=upgrade
+    [ -n "$(cask_version)" ] || verb=install
+    brew "$verb" --cask "$CASK" || warn "brew $verb --cask $CASK exited nonzero"
+  }
+  install_or_upgrade
   # The tap is bumped only after upstream's signed release workflow finishes,
   # so a sync can land the release commit before the cask exists. A transient
-  # download failure leaves the old version too. Refresh the taps once and
-  # retry before the version check below reports it as failed.
+  # download failure leaves the old version (or none) too. Refresh the taps
+  # once and retry before the version check below reports it as failed.
   if ! version_ge "$(cask_version)" "$want"; then
-    if ! { brew update --quiet && brew upgrade --cask "$CASK"; }; then
-      warn "brew update and upgrade retry exited nonzero"
-    fi
+    brew update --quiet || warn "brew update exited nonzero"
+    install_or_upgrade
   fi
 fi
 

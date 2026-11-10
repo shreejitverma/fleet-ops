@@ -8,6 +8,10 @@
 # bundle id, and a Gatekeeper rejection each fail, and a cask at exactly the
 # fork's release must bundle the Pi pinned at its release tag v<version>
 # (the pin on HEAD can run ahead of the release; a missing tag only warns).
+# The installed result, not brew's exit status, decides pass or fail: a brew
+# install or upgrade that exits nonzero only warns, still gets the tap-refresh
+# retry when it left the cask behind the pin (installing again if it left
+# nothing), and fails only through the checks on what ended up installed.
 # brew, codesign and spctl are stubs and the clone is a sandbox git repo, so
 # this runs on any CI host.
 set -u
@@ -29,12 +33,20 @@ mkdir -p "$stubs" "$app/Contents/MacOS" "$clone/packaging"
 
 # brew: INSTALLED holds the installed cask version (empty file = absent); the
 # tap offers TAP_VERSION, and TAP_AFTER_UPDATE once `brew update` has run.
+# Like real brew, upgrading an absent cask is rejected. install and upgrade
+# exit BREW_EXIT after writing; while the FLAKY file exists, the next install
+# or upgrade consumes it and fails without writing (a dropped download).
 cat >"$stubs/brew" <<'EOF'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >>"$CALLS"
 case "$1" in
   list) [ -s "$INSTALLED" ] && echo "pi-launcher $(cat "$INSTALLED")"; exit 0 ;;
-  install | upgrade) cat "$TAP" >"$INSTALLED"; exit 0 ;;
+  install | upgrade)
+    [ "$1" = upgrade ] && [ ! -s "$INSTALLED" ] && exit 1
+    [ -e "$FLAKY" ] && { rm "$FLAKY"; exit 1; }
+    cat "$TAP" >"$INSTALLED"
+    exit "$BREW_EXIT"
+    ;;
   update) [ -n "${TAP_AFTER_UPDATE:-}" ] && echo "$TAP_AFTER_UPDATE" >"$TAP"; exit 0 ;;
 esac
 exit 1
@@ -84,6 +96,7 @@ g tag v1.2.17
 calls="$sandbox/calls"
 installed="$sandbox/installed"
 tap="$sandbox/tap"
+flaky="$sandbox/flaky"
 
 # run <fork version> <installed or ""> <tap version> [script args...]
 run() {
@@ -97,6 +110,7 @@ run() {
     VERIFY_EXIT="${VERIFY_EXIT:-0}" SPCTL_EXIT="${SPCTL_EXIT:-0}" \
     BUNDLED_PI="${BUNDLED_PI:-1.3.0}" PI_EXIT="${PI_EXIT:-0}" \
     TAP_AFTER_UPDATE="${TAP_AFTER_UPDATE:-}" PI_LAUNCHER_CLONE="$clone" \
+    BREW_EXIT="${BREW_EXIT:-0}" FLAKY="$flaky" \
     bash "$script" "$@" >"$sandbox/out" 2>&1
 }
 
@@ -108,6 +122,7 @@ expect() {
 }
 calls_only_list() { ! grep -qv '^list' "$calls"; }
 upgrade_count() { [ "$(grep -c '^upgrade' "$calls")" -eq "$1" ]; }
+install_count() { [ "$(grep -c '^install' "$calls")" -eq "$1" ]; }
 
 run 1.2.17 1.2.17 1.2.17 --check
 expect "check passes on a matching signed install" [ $? -eq 0 ]
@@ -134,6 +149,25 @@ expect "a tap still stale after refresh fails" [ $? -eq 1 ]
 run 1.2.17 "" 1.2.17
 expect "missing cask install succeeds" [ $? -eq 0 ]
 expect "missing cask is installed from kunchenguid/tap" grep -q '^install --cask kunchenguid/tap/pi-launcher' "$calls"
+
+BREW_EXIT=1 run 1.2.17 1.2.16 1.2.17
+expect "an upgrade that exits nonzero after installing the pin passes" [ $? -eq 0 ]
+expect "the nonzero upgrade only warns" grep -q '^warn  brew upgrade --cask .* exited nonzero' "$sandbox/out"
+expect "a completed upgrade is not retried" upgrade_count 1
+
+BREW_EXIT=1 TAP_AFTER_UPDATE=1.2.17 run 1.2.17 1.2.16 1.2.16
+expect "a nonzero upgrade left behind the pin is retried and passes" [ $? -eq 0 ]
+expect "upgrade retried after a nonzero upgrade" upgrade_count 2
+
+BREW_EXIT=1 run 1.2.17 1.2.16 1.2.16
+expect "a nonzero upgrade still behind the pin exits 1" [ $? -eq 1 ]
+expect "the version check names the stale cask" grep -q '^FAIL  cask pi-launcher 1.2.16 is older' "$sandbox/out"
+
+touch "$flaky"
+run 1.2.17 "" 1.2.17
+expect "a first install that dropped its download is retried and passes" [ $? -eq 0 ]
+expect "the retry installs rather than upgrades an absent cask" install_count 2
+expect "the dropped install only warns" grep -q '^warn  brew install --cask .* exited nonzero' "$sandbox/out"
 
 TEAM=ABCDE12345 run 1.2.17 1.2.17 1.2.17 --check
 expect "wrong signing team exits 1" [ $? -eq 1 ]
