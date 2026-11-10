@@ -49,18 +49,23 @@ cask_version() { brew list --cask --versions pi-launcher 2>/dev/null | awk '{pri
 version_ge() { [ -n "$1" ] && [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -1)" = "$2" ]; }
 
 if [ "$mode" = install ]; then
-  if [ -z "$(cask_version)" ]; then
-    brew install --cask "$CASK" || bad "brew install --cask $CASK failed"
-  else
-    brew upgrade --cask "$CASK" || bad "brew upgrade --cask $CASK failed"
-  fi
+  # A nonzero brew exit only warns: brew retries a failed download itself and
+  # can still exit 1 after the upgrade completed (seen 2026-11-10 on a
+  # connection reset). The checks below verify the installed result and are
+  # what decide pass or fail.
+  install_or_upgrade() {
+    local verb=upgrade
+    [ -n "$(cask_version)" ] || verb=install
+    brew "$verb" --cask "$CASK" || warn "brew $verb --cask $CASK exited nonzero"
+  }
+  install_or_upgrade
   # The tap is bumped only after upstream's signed release workflow finishes,
-  # so a sync can land the release commit before the cask exists. Refresh the
-  # taps once and retry before reporting the version check below as failed.
-  if [ "$fail" -eq 0 ] && ! version_ge "$(cask_version)" "$want"; then
-    if ! { brew update --quiet && brew upgrade --cask "$CASK"; }; then
-      bad "brew update and upgrade retry failed"
-    fi
+  # so a sync can land the release commit before the cask exists. A transient
+  # download failure leaves the old version (or none) too. Refresh the taps
+  # once and retry before the version check below reports it as failed.
+  if ! version_ge "$(cask_version)" "$want"; then
+    brew update --quiet || warn "brew update exited nonzero"
+    install_or_upgrade
   fi
 fi
 
